@@ -515,3 +515,28 @@ code {
 }
 .thread-item-head { align-items: flex-start; }
 .thread-header-row { align-items: center; gap: 12px; }
+
+.account-notice { margin: 0 0 12px; }
+.account-location-card {
+  display: flex; gap: 14px; align-items: center; justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 0 0 16px; padding: 14px 16px;
+  background: #f3eee4; border-radius: 14px; border: 1px solid #e4d8c4;
+}
+.account-location-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+  text-transform: uppercase; color: #7a6a56; margin-bottom: 2px;
+}
+.account-location-value {
+  font-size: 17px; font-weight: 700; color: #2c2418;
+}
+.profile-location-block {
+  margin: 8px 0 18px; padding: 14px 16px;
+  background: #f7f2e8; border-radius: 14px; border: 1px solid #e4d8c4;
+}
+.profile-section-title {
+  margin: 16px 0 8px; font-size: 15px; font-weight: 700; color: #3a2f22;
+}
+.profile-location-block .profile-section-title { margin-top: 0; }
+.profile-save-row { margin-top: 8px; }
+.avatar-field label { font-weight: 700; }

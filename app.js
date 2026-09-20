@@ -489,6 +489,7 @@ let state = {
   authScreen: "welcome", // welcome | create | signin | demo
   editingProfile: false,
   avatarDraft: undefined, // undefined=keep | null=cleared | string=dataURL
+  profileNotice: null, // brief success banner after Save profile
   reportTarget: null, // { kind, listingId?, userId? } | null
   filtersOpen: false // mobile browse filters disclosure
 };
@@ -1321,6 +1322,10 @@ function go(view, listingId) {
   if (view !== "thread") state.threadId = null;
   if (view !== "propose") state.pickOfferedId = null;
   if (view !== "detail" && view !== "thread") state.reportTarget = null;
+  if (view !== "account") {
+    state.editingProfile = false;
+    state.profileNotice = null;
+  }
   render();
   window.scrollTo(0, 0);
 }
@@ -1384,19 +1389,20 @@ function avatarEditorHTML(existingAvatar, previewName) {
     avatar: url || ""
   };
   const preview = avatarHTML(previewUser, "lg");
+  const hasPhoto = !!url;
   return `
     <div class="field avatar-field">
-      <label>Profile photo (optional)</label>
+      <label>Profile photo</label>
       <div class="avatar-editor">
         <div id="avatarPreview">${preview}</div>
         <div class="avatar-editor-actions">
-          <label class="ghost file-btn">Choose photo
+          <label class="ghost file-btn">${hasPhoto ? "Change photo" : "Choose photo"}
             <input type="file" accept="image/*" hidden onchange="onAvatarPicked(event)" />
           </label>
-          <button type="button" class="ghost" id="avatarClearBtn" style="display:${url ? "inline-flex" : "none"}" onclick="clearAvatarDraft()">Remove photo</button>
+          <button type="button" class="ghost" id="avatarClearBtn" style="display:${hasPhoto ? "inline-flex" : "none"}" onclick="clearAvatarDraft()">Remove photo</button>
         </div>
       </div>
-      <p class="help">Resized to ~256px and stored in this browser only (keeps localStorage small).</p>
+      <p class="help">Upload a new photo, preview it, or remove it. Resized to ~256px and stored in this browser only.</p>
     </div>`;
 }
 
@@ -1768,6 +1774,10 @@ function submitEditProfile(e) {
     alert("Email is required.");
     return;
   }
+  if (!city) {
+    alert("City is required.");
+    return;
+  }
   if (!isTexasZip(zip)) {
     alert("Texas ZIP required in v1.");
     return;
@@ -1777,6 +1787,7 @@ function submitEditProfile(e) {
     alert("That email is already used by another demo account.");
     return;
   }
+  const prevZip = String(me.zip || "").trim();
   me.name = name;
   me.email = email;
   me.city = city;
@@ -1795,7 +1806,31 @@ function submitEditProfile(e) {
   }
   applyAvatarDraft(me);
   db.save(data);
+  // Keep browse near-me default in sync when profile ZIP changes
+  // (or when searchZip still matched the previous profile ZIP / was empty).
+  const curSearch = state.searchZip == null ? "" : String(state.searchZip).trim();
+  if (zip !== prevZip || !curSearch || curSearch === prevZip) {
+    state.searchZip = zip;
+  }
   state.editingProfile = false;
+  state.avatarDraft = undefined;
+  state.profileNotice =
+    "Profile saved. Photo and location update across Account, listings, messages, and Browse near-me.";
+  render();
+  window.scrollTo(0, 0);
+}
+
+function startEditProfile() {
+  state.editingProfile = true;
+  state.avatarDraft = undefined;
+  state.profileNotice = null;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function cancelEditProfile() {
+  state.editingProfile = false;
+  state.avatarDraft = undefined;
   render();
 }
 
@@ -3080,15 +3115,34 @@ function accountHTML(data) {
     !me.subscribed && count > 3
       ? `<div class="warn">Extra-listing plan canceled (or never active) while over the free limit. You cannot post until active listings ≤ 3 or you upgrade.</div>`
       : "";
+  const notice = state.profileNotice
+    ? `<div class="ok account-notice" role="status">${escapeHtml(state.profileNotice)}</div>`
+    : "";
+  const locLabel =
+    me.city || me.zip
+      ? `${escapeHtml(me.city || "—")}, TX ${escapeHtml(me.zip || "")}`
+      : "No location set";
 
   if (state.editingProfile) {
     return `
       <div class="panel" style="max-width:640px">
-        <button class="ghost" onclick="state.editingProfile=false; state.avatarDraft=undefined; render()">← Back</button>
+        <button class="ghost" type="button" onclick="cancelEditProfile()">← Back to Account</button>
         <h2>Edit profile</h2>
+        <p class="help">Update your photo and Texas location anytime — e.g. if you move. Changes show in the top bar, listings, messages, and Browse near-me.</p>
         <div class="warn">Demo only: password changes stay in this browser.</div>
         <form onsubmit="submitEditProfile(event)">
           ${avatarEditorHTML(me.avatar || "", me.name || "You")}
+          <div class="profile-location-block">
+            <h3 class="profile-section-title">Location</h3>
+            <p class="help" style="margin-top:0">City + Texas ZIP. Browse near-me uses this ZIP by default after you save.</p>
+            <div class="field"><label>City *</label>
+              <input name="city" required maxlength="60" value="${escapeAttr(me.city || "")}" placeholder="Moulton" />
+            </div>
+            <div class="field"><label>ZIP * (Texas)</label>
+              <input name="zip" required maxlength="5" pattern="\\d{5}" inputmode="numeric" value="${escapeAttr(me.zip || "")}" placeholder="77975" />
+            </div>
+          </div>
+          <h3 class="profile-section-title">Account details</h3>
           <div class="field"><label>Name *</label>
             <input name="name" required maxlength="60" value="${escapeAttr(me.name)}" />
           </div>
@@ -3113,16 +3167,13 @@ function accountHTML(data) {
           <div class="field" id="editCompanyField" style="display:${me.contractor ? "block" : "none"}"><label>Company name</label>
             <input name="company" maxlength="80" value="${escapeAttr(me.company || "")}" />
           </div>
-          <div class="field"><label>City *</label>
-            <input name="city" required maxlength="60" value="${escapeAttr(me.city || "")}" />
-          </div>
-          <div class="field"><label>ZIP * (Texas)</label>
-            <input name="zip" required maxlength="5" pattern="\\d{5}" inputmode="numeric" value="${escapeAttr(me.zip || "")}" />
-          </div>
           <div class="field"><label>Short bio</label>
             <textarea name="bio" rows="2" maxlength="280">${escapeHtml(me.bio || "")}</textarea>
           </div>
-          <button class="primary" type="submit">Save profile</button>
+          <div class="actions profile-save-row">
+            <button class="primary" type="submit">Save profile</button>
+            <button class="ghost" type="button" onclick="cancelEditProfile()">Cancel</button>
+          </div>
         </form>
       </div>`;
   }
@@ -3130,12 +3181,21 @@ function accountHTML(data) {
   return `
     <div class="panel" style="max-width:640px">
       <h2>Account</h2>
+      ${notice}
       <div class="account-hero">
         ${avatarHTML(me, "lg")}
         <div>
           <div class="ok" style="margin-bottom:6px">${profileBadgeHTML(me, { hideAvatar: true })}</div>
-          <p class="meta" style="margin:0">${escapeHtml(me.email || "—")} · ${escapeHtml(me.city || "—")}, TX ${escapeHtml(me.zip || "")}</p>
+          <p class="meta" style="margin:0">${escapeHtml(me.email || "—")}</p>
         </div>
+      </div>
+      <div class="account-location-card">
+        <div>
+          <div class="account-location-label">Your location</div>
+          <div class="account-location-value">${locLabel}</div>
+          <p class="help" style="margin:6px 0 0">Used as the default Browse near-me ZIP. Change it anytime if you move.</p>
+        </div>
+        <button class="primary" type="button" onclick="startEditProfile()">Edit profile</button>
       </div>
       ${me.company ? `<p class="meta">Company: ${escapeHtml(me.company)}</p>` : ""}
       ${me.bio ? `<p>${escapeHtml(me.bio)}</p>` : ""}
@@ -3145,7 +3205,7 @@ function accountHTML(data) {
       ${blockedNote}
       <div class="actions">
         <button class="ghost" onclick="go('mine')">My listings</button>
-        <button class="ghost" onclick="state.editingProfile=true; state.avatarDraft=undefined; render()">Edit profile</button>
+        <button class="ghost" type="button" onclick="startEditProfile()">Edit photo &amp; location</button>
         <button class="primary" onclick="toggleSub()">${
           me.subscribed ? "Cancel extra-listing plan" : "Upgrade $3.99/month"
         }</button>
@@ -3228,6 +3288,7 @@ function resetDemo() {
     authScreen: "welcome",
     editingProfile: false,
     avatarDraft: undefined,
+    profileNotice: null,
     reportTarget: null,
     filtersOpen: false
   };
