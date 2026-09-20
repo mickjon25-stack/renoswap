@@ -170,7 +170,18 @@ function blankUserExtras() {
     profileComplete: false,
     subscribed: false,
     admin: false,
-    blocked: []
+    blocked: [],
+    notifyEnabled: false,
+    notifyMatches: true,
+    notifyInterest: true,
+    notifyMessages: true,
+    watchKeywords: "",
+    notifyPermission: "default",
+    lastNotifyScan: 0,
+    notifiedListingIds: [],
+    notifiedOfferIds: [],
+    notifiedMessageIds: [],
+    notifyPromptDismissed: false
   };
 }
 
@@ -398,6 +409,17 @@ function normalizeUser(u, id) {
   if (seed && !out.password) out.password = seed.password;
   if (seed && !out.city) out.city = seed.city;
   if (seed && !out.zip) out.zip = seed.zip;
+  if (out.notifyEnabled == null) out.notifyEnabled = false;
+  if (out.notifyMatches == null) out.notifyMatches = true;
+  if (out.notifyInterest == null) out.notifyInterest = true;
+  if (out.notifyMessages == null) out.notifyMessages = true;
+  if (out.watchKeywords == null) out.watchKeywords = "";
+  if (out.notifyPermission == null) out.notifyPermission = "default";
+  if (out.lastNotifyScan == null) out.lastNotifyScan = 0;
+  if (!Array.isArray(out.notifiedListingIds)) out.notifiedListingIds = [];
+  if (!Array.isArray(out.notifiedOfferIds)) out.notifiedOfferIds = [];
+  if (!Array.isArray(out.notifiedMessageIds)) out.notifiedMessageIds = [];
+  if (out.notifyPromptDismissed == null) out.notifyPromptDismissed = false;
   return out;
 }
 
@@ -942,6 +964,409 @@ function browseMatchesForYou(data, pool) {
     .map((x) => x.l);
 }
 
+/* ——— Browser notifications (Notification API, tab-open demo) ——— */
+let notifyPollTimer = null;
+const NOTIFY_POLL_MS = 45000;
+const NOTIFIED_CAP = 200;
+
+function notificationsSupported() {
+  return typeof window !== "undefined" && "Notification" in window;
+}
+
+function notifyPlain(s) {
+  return String(s || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[&<>]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
+}
+
+function syncNotifyPermissionSnapshot(me) {
+  if (!me) return;
+  if (!notificationsSupported()) {
+    me.notifyPermission = "unsupported";
+    return;
+  }
+  me.notifyPermission = Notification.permission;
+}
+
+function notificationsAllowed(me) {
+  if (!me || !me.notifyEnabled) return false;
+  if (!notificationsSupported()) return false;
+  return Notification.permission === "granted";
+}
+
+function pushNotifiedId(arr, id) {
+  if (!id) return;
+  if (arr.includes(id)) return;
+  arr.push(id);
+  while (arr.length > NOTIFIED_CAP) arr.shift();
+}
+
+function fireAppNotification(title, body, opts) {
+  opts = opts || {};
+  if (!notificationsSupported() || Notification.permission !== "granted") return null;
+  try {
+    const n = new Notification(notifyPlain(title) || "RenoSwap", {
+      body: notifyPlain(body),
+      tag: opts.tag || undefined,
+      silent: false
+    });
+    n.onclick = () => {
+      try {
+        window.focus();
+      } catch (_) {}
+      if (opts.listingId) go("detail", opts.listingId);
+      else if (opts.threadId) goThread(opts.threadId);
+      else if (opts.view) go(opts.view);
+      try {
+        n.close();
+      } catch (_) {}
+    };
+    return n;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Tokens from Approved listings' looking_for + watchKeywords. */
+function userInterestTokens(data, me) {
+  if (!me) return [];
+  const parts = [];
+  (data.listings || []).forEach((l) => {
+    if (l.poster === me.id && l.status === "Approved" && String(l.looking_for || "").trim()) {
+      parts.push(l.looking_for);
+    }
+  });
+  if (String(me.watchKeywords || "").trim()) parts.push(me.watchKeywords);
+  return tokenizeMatch(parts.join(" "));
+}
+
+function listingMatchScoreForUser(listing, tokens) {
+  if (!listing || !tokens.length) return 0;
+  const fakeTarget = { looking_for: tokens.join(" "), category: "", title: "" };
+  return scoreSwapMatch(listing, fakeTarget);
+}
+
+async function requestNotifyPermission() {
+  const data = db.get();
+  const me = data.users[data.currentUser];
+  if (!me) return;
+  if (!notificationsSupported()) {
+    alert("This browser does not support notifications.");
+    syncNotifyPermissionSnapshot(me);
+    db.save(data);
+    render();
+    return;
+  }
+  let perm = Notification.permission;
+  if (perm === "default") {
+    try {
+      perm = await Notification.requestPermission();
+    } catch (_) {
+      perm = Notification.permission;
+    }
+  }
+  me.notifyPermission = perm;
+  if (perm === "granted") {
+    me.notifyEnabled = true;
+    if (me.notifyMatches == null) me.notifyMatches = true;
+    if (me.notifyInterest == null) me.notifyInterest = true;
+    if (me.notifyMessages == null) me.notifyMessages = true;
+  } else {
+    me.notifyEnabled = false;
+  }
+  db.save(data);
+  render();
+  if (perm === "granted") scanAndNotify(db.get(), { baseline: true });
+}
+
+function setNotifyEnabled(on) {
+  const data = db.get();
+  const me = data.users[data.currentUser];
+  if (!me) return;
+  if (on) {
+    if (!notificationsSupported()) {
+      alert("This browser does not support notifications.");
+      return;
+    }
+    if (Notification.permission === "granted") {
+      me.notifyEnabled = true;
+      syncNotifyPermissionSnapshot(me);
+      db.save(data);
+      render();
+      scanAndNotify(db.get(), { baseline: true });
+      return;
+    }
+    if (Notification.permission === "denied") {
+      me.notifyEnabled = false;
+      syncNotifyPermissionSnapshot(me);
+      db.save(data);
+      render();
+      return;
+    }
+    requestNotifyPermission();
+    return;
+  }
+  me.notifyEnabled = false;
+  syncNotifyPermissionSnapshot(me);
+  db.save(data);
+  render();
+}
+
+function setNotifyPref(key, value) {
+  const data = db.get();
+  const me = data.users[data.currentUser];
+  if (!me) return;
+  if (!["notifyMatches", "notifyInterest", "notifyMessages"].includes(key)) return;
+  me[key] = !!value;
+  db.save(data);
+  render();
+}
+
+function saveWatchKeywords(e) {
+  e.preventDefault();
+  const data = db.get();
+  const me = data.users[data.currentUser];
+  if (!me) return;
+  const fd = new FormData(e.target);
+  me.watchKeywords = String(fd.get("watchKeywords") || "")
+    .trim()
+    .slice(0, 200);
+  db.save(data);
+  state.profileNotice = "Watch keywords saved.";
+  render();
+  scanAndNotify(db.get(), { refreshMatches: true });
+}
+
+function dismissNotifyPrompt() {
+  const data = db.get();
+  const me = data.users[data.currentUser];
+  if (!me) return;
+  me.notifyPromptDismissed = true;
+  db.save(data);
+  render();
+}
+
+function notifyBannerHTML(me) {
+  if (!me || !notificationsSupported()) return "";
+  syncNotifyPermissionSnapshot(me);
+  if (Notification.permission === "denied") return "";
+  if (Notification.permission === "granted" && me.notifyEnabled) return "";
+  if (me.notifyPromptDismissed && Notification.permission !== "default") return "";
+  if (Notification.permission === "default" && me.notifyPromptDismissed) {
+    // soft: still show once in a while? Spec: soft banner if default. Allow dismiss.
+    // If dismissed while default, hide until Account.
+    return "";
+  }
+  if (Notification.permission === "granted" && !me.notifyEnabled) {
+    return `
+      <div class="notify-banner" role="status">
+        <div>
+          <strong>Browser permission is on</strong>
+          <p class="help" style="margin:4px 0 0">Turn on RenoSwap alerts for matching listings, offers, and messages.</p>
+        </div>
+        <div class="notify-banner-actions">
+          <button type="button" class="primary" onclick="setNotifyEnabled(true)">Enable alerts</button>
+          <button type="button" class="ghost" onclick="dismissNotifyPrompt()">Not now</button>
+        </div>
+      </div>`;
+  }
+  if (Notification.permission === "default" && !me.notifyPromptDismissed) {
+    return `
+      <div class="notify-banner" role="status">
+        <div>
+          <strong>Turn on notifications for swaps &amp; buys</strong>
+          <p class="help" style="margin:4px 0 0">Get pinged when a listing matches what you are looking for, or when someone wants your materials.</p>
+        </div>
+        <div class="notify-banner-actions">
+          <button type="button" class="primary" onclick="requestNotifyPermission()">Allow</button>
+          <button type="button" class="ghost" onclick="dismissNotifyPrompt()">Not now</button>
+        </div>
+      </div>`;
+  }
+  return "";
+}
+
+function notifySettingsHTML(me) {
+  if (!me) return "";
+  syncNotifyPermissionSnapshot(me);
+  const supported = notificationsSupported();
+  const perm = supported ? Notification.permission : "unsupported";
+  const permLabel =
+    perm === "granted"
+      ? "Granted"
+      : perm === "denied"
+        ? "Denied"
+        : perm === "unsupported"
+          ? "Not supported in this browser"
+          : "Not asked yet (default)";
+  const deniedHelp =
+    perm === "denied"
+      ? `<p class="help">Notifications were blocked. Re-enable them in your browser site settings for this page, then use Allow again here.</p>`
+      : "";
+  const subDisabled = !(perm === "granted" && me.notifyEnabled);
+  return `
+    <div class="panel notify-settings" style="margin-top:16px;background:#f3eee4;box-shadow:none">
+      <h3 style="margin-top:0;font-size:16px">Notifications</h3>
+      <p class="help" style="margin-top:0">Browser alerts while RenoSwap is open in this tab (demo — no push server).</p>
+      <p class="meta">Permission: <b>${escapeHtml(permLabel)}</b></p>
+      ${deniedHelp}
+      <label class="notify-toggle">
+        <input type="checkbox" ${me.notifyEnabled && perm === "granted" ? "checked" : ""} ${
+          !supported || perm === "denied" ? "disabled" : ""
+        } onchange="setNotifyEnabled(this.checked)" />
+        <span>Allow notifications</span>
+      </label>
+      <div class="notify-subprefs" style="opacity:${subDisabled ? "0.55" : "1"}">
+        <label class="notify-toggle">
+          <input type="checkbox" ${me.notifyMatches !== false ? "checked" : ""} ${
+            subDisabled ? "disabled" : ""
+          } onchange="setNotifyPref('notifyMatches', this.checked)" />
+          <span>Alert me when listings match my “looking for”</span>
+        </label>
+        <label class="notify-toggle">
+          <input type="checkbox" ${me.notifyInterest !== false ? "checked" : ""} ${
+            subDisabled ? "disabled" : ""
+          } onchange="setNotifyPref('notifyInterest', this.checked)" />
+          <span>Alert me when someone wants to buy/swap/claim my listings</span>
+        </label>
+        <label class="notify-toggle">
+          <input type="checkbox" ${me.notifyMessages !== false ? "checked" : ""} ${
+            subDisabled ? "disabled" : ""
+          } onchange="setNotifyPref('notifyMessages', this.checked)" />
+          <span>Alert me for new messages</span>
+        </label>
+      </div>
+      <form onsubmit="saveWatchKeywords(event)" class="watch-keywords-form">
+        <div class="field" style="margin-bottom:8px">
+          <label>Watch keywords (comma-separated)</label>
+          <input name="watchKeywords" maxlength="200" value="${escapeAttr(me.watchKeywords || "")}" placeholder="quartz, wet saw, subway tile" />
+        </div>
+        <button class="ghost" type="submit">Save keywords</button>
+      </form>
+      ${
+        perm === "default"
+          ? `<div class="actions" style="margin-top:10px"><button type="button" class="primary" onclick="requestNotifyPermission()">Allow notifications</button></div>`
+          : ""
+      }
+    </div>`;
+}
+
+function scanAndNotify(data, opts) {
+  opts = opts || {};
+  const me = data && data.users[data.currentUser];
+  if (!me || !notificationsAllowed(me)) return;
+  const firstScan = !Number(me.lastNotifyScan);
+  const baseline = !!opts.baseline || firstScan;
+  const since = baseline ? Number.MAX_SAFE_INTEGER : Number(me.lastNotifyScan) || 0;
+  const now = Date.now();
+
+  if (me.notifyMatches !== false) {
+    const tokens = userInterestTokens(data, me);
+    if (tokens.length) {
+      (data.listings || []).forEach((l) => {
+        if (!l || l.poster === me.id || l.status !== "Approved") return;
+        if ((me.notifiedListingIds || []).includes(l.id)) return;
+        const when = Number(l.approved_at) || 0;
+        if (!baseline && !opts.refreshMatches) {
+          if (when && when <= since) return;
+          if (!when && since > 0) return;
+        }
+        const score = listingMatchScoreForUser(l, tokens);
+        if (score < 3) return;
+        pushNotifiedId(me.notifiedListingIds, l.id);
+        if (baseline) return;
+        fireAppNotification(
+          "Listing matches what you're looking for",
+          (l.title || "Listing") + " · " + (l.intent || "Listing"),
+          { tag: "match-" + l.id, listingId: l.id }
+        );
+      });
+    }
+  }
+
+  if (me.notifyInterest !== false) {
+    (data.offers || []).forEach((o) => {
+      if (!o || o.from === me.id) return;
+      if ((me.notifiedOfferIds || []).includes(o.id)) return;
+      const l = listingById(data, o.listingId || o.listing);
+      if (!l || l.poster !== me.id) return;
+      const when = Number(o.at) || 0;
+      if (!baseline && when && when <= since) return;
+      pushNotifiedId(me.notifiedOfferIds, o.id);
+      if (!baseline) {
+        const kind =
+          o.type === "Claim Free"
+            ? "Fast & Free claim"
+            : (o.type || "Offer") + " offer";
+        fireAppNotification(
+          "Someone is interested in your listing",
+          kind + ' on "' + (l.title || "listing") + '"',
+          { tag: "offer-" + o.id, listingId: l.id }
+        );
+      }
+      // Dedupe auto-messages created with the offer/claim
+      (data.messages || []).forEach((m) => {
+        if (m.from !== o.from) return;
+        if (Math.abs((m.at || 0) - (o.at || 0)) > 5000) return;
+        const th = (data.threads || []).find((t) => t.id === m.threadId);
+        if (!th || th.listingId !== l.id) return;
+        pushNotifiedId(me.notifiedMessageIds, m.id);
+      });
+    });
+  }
+
+  if (me.notifyMessages !== false) {
+    (data.messages || []).forEach((m) => {
+      if (!m || m.from === me.id) return;
+      if ((me.notifiedMessageIds || []).includes(m.id)) return;
+      const thread = (data.threads || []).find((t) => t.id === m.threadId);
+      if (!thread || !(thread.participants || []).includes(me.id)) return;
+      const when = Number(m.at) || 0;
+      if (!baseline && when && when <= since) return;
+      pushNotifiedId(me.notifiedMessageIds, m.id);
+      if (baseline) return;
+      const listing = listingById(data, thread.listingId);
+      const fromUser = userBy(m.from);
+      fireAppNotification(
+        "New message" + (fromUser ? " from " + fromUser.name : ""),
+        m.body,
+        {
+          tag: "msg-" + m.id,
+          threadId: thread.id,
+          listingId: listing && listing.id
+        }
+      );
+    });
+  }
+
+  me.lastNotifyScan = now;
+  syncNotifyPermissionSnapshot(me);
+  db.save(data);
+}
+
+function ensureNotifyPolling() {
+  if (notifyPollTimer) return;
+  notifyPollTimer = setInterval(() => {
+    const data = db.get();
+    if (needsAuth(data)) return;
+    scanAndNotify(data);
+  }, NOTIFY_POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      const data = db.get();
+      if (!needsAuth(data)) scanAndNotify(data);
+    }
+  });
+}
+
 const REPORT_REASONS = [
   "Wrong category",
   "Not reno materials",
@@ -1245,7 +1670,7 @@ function render() {
           </button>
         </nav>
       </header>
-      <main class="wrap">${viewHTML(data)}</main>
+      <main class="wrap">${notifyBannerHTML(sessionUser(data))}${viewHTML(data)}</main>
       <nav class="bottom-nav" aria-label="Primary">
         <button type="button" class="${bottomBrowse}" onclick="go('browse')">
           <span class="bn-icon" aria-hidden="true">⌂</span>
@@ -1277,6 +1702,8 @@ function render() {
     const scroller = document.getElementById("msgList");
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
   }
+  ensureNotifyPolling();
+  scanAndNotify(data);
 }
 
 function startCountdownIfNeeded(data) {
@@ -3037,6 +3464,7 @@ function approve(id) {
   }
   db.save(data);
   render();
+  scanAndNotify(db.get());
 }
 
 function reject(id) {
@@ -3213,6 +3641,7 @@ function accountHTML(data) {
       <div class="actions signout-row">
         <button class="danger signout-btn" type="button" onclick="logout()">Sign out</button>
       </div>
+      ${notifySettingsHTML(me)}
       <div class="panel" style="margin-top:16px;background:#f3eee4;box-shadow:none">
         <h3 style="margin-top:0;font-size:16px">Blocked users</h3>
         ${
