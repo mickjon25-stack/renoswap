@@ -166,6 +166,7 @@ function blankUserExtras() {
     zip: "",
     bio: "",
     company: "",
+    avatar: "",
     profileComplete: false,
     subscribed: false,
     admin: false,
@@ -385,6 +386,7 @@ function normalizeUser(u, id) {
   if (out.subscribed == null) out.subscribed = false;
   if (out.admin == null) out.admin = !!out.admin || out.role === "Admin";
   if (!Array.isArray(out.blocked)) out.blocked = [];
+  if (out.avatar == null) out.avatar = "";
   if (out.profileComplete == null) {
     // Existing seed accounts / prior sessions count as complete once migrated.
     out.profileComplete = !!(out.email || seed);
@@ -486,6 +488,7 @@ let state = {
   pickOfferedId: null,
   authScreen: "welcome", // welcome | create | signin | demo
   editingProfile: false,
+  avatarDraft: undefined, // undefined=keep | null=cleared | string=dataURL
   reportTarget: null, // { kind, listingId?, userId? } | null
   filtersOpen: false // mobile browse filters disclosure
 };
@@ -1173,16 +1176,22 @@ function render() {
   db.save(data);
 
   if (needsAuth(data)) {
+    const authScreen = state.authScreen || "welcome";
+    const showSignInTop =
+      authScreen !== "signin"
+        ? `<button class="ghost" type="button" onclick="setAuthScreen('signin')">Sign in</button>`
+        : "";
     document.getElementById("app").innerHTML = `
       <div class="app-shell">
         <header class="topbar">
-          <div class="brand">
+          <div class="brand" onclick="setAuthScreen('welcome')">
             <div class="logo">RS</div>
             <div>
               <h1>RenoSwap</h1>
               <span>Texas first · swap first</span>
             </div>
           </div>
+          <nav class="nav" aria-label="Auth">${showSignInTop}</nav>
         </header>
         <main class="wrap">${authHTML(data)}</main>
       </div>`;
@@ -1230,6 +1239,9 @@ function render() {
               : ""
           }
           <button class="nav-desktop ${state.view === "account" ? "active" : ""}" onclick="go('account')">Account</button>
+          <button type="button" class="topbar-user" onclick="go('account')" title="Account" aria-label="Account">
+            ${avatarHTML(sessionUser(data), "sm")}
+          </button>
         </nav>
       </header>
       <main class="wrap">${viewHTML(data)}</main>
@@ -1325,7 +1337,160 @@ function goThread(threadId) {
 
 function setAuthScreen(screen) {
   state.authScreen = screen || "welcome";
+  if (screen === "create") state.avatarDraft = undefined;
   render();
+}
+
+function userInitials(name) {
+  const parts = String(name || "U")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return "U";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function avatarHue(key) {
+  let h = 0;
+  const s = String(key || "x");
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h % 360;
+}
+
+/** size: xs | sm | md | lg */
+function avatarHTML(u, size) {
+  size = size || "sm";
+  const name = (u && u.name) || "User";
+  const cls = `avatar avatar-${size}`;
+  if (u && u.avatar) {
+    return `<span class="${cls}" title="${escapeAttr(name)}"><img src="${escapeAttr(u.avatar)}" alt="" /></span>`;
+  }
+  const hue = avatarHue((u && u.id) || name);
+  return `<span class="${cls} avatar-fallback" style="--avatar-hue:${hue}" title="${escapeAttr(name)}" aria-hidden="true">${escapeHtml(userInitials(name))}</span>`;
+}
+
+function effectiveAvatarUrl(existing) {
+  if (state.avatarDraft === null) return "";
+  if (typeof state.avatarDraft === "string") return state.avatarDraft;
+  return existing || "";
+}
+
+function avatarEditorHTML(existingAvatar, previewName) {
+  const url = effectiveAvatarUrl(existingAvatar);
+  const previewUser = {
+    id: "preview",
+    name: previewName || "You",
+    avatar: url || ""
+  };
+  const preview = avatarHTML(previewUser, "lg");
+  return `
+    <div class="field avatar-field">
+      <label>Profile photo (optional)</label>
+      <div class="avatar-editor">
+        <div id="avatarPreview">${preview}</div>
+        <div class="avatar-editor-actions">
+          <label class="ghost file-btn">Choose photo
+            <input type="file" accept="image/*" hidden onchange="onAvatarPicked(event)" />
+          </label>
+          <button type="button" class="ghost" id="avatarClearBtn" style="display:${url ? "inline-flex" : "none"}" onclick="clearAvatarDraft()">Remove photo</button>
+        </div>
+      </div>
+      <p class="help">Resized to ~256px and stored in this browser only (keeps localStorage small).</p>
+    </div>`;
+}
+
+function compressImageFile(file, maxPx, quality) {
+  maxPx = maxPx || 256;
+  quality = quality == null ? 0.72 : quality;
+  return new Promise((resolve, reject) => {
+    if (!file || !String(file.type || "").startsWith("image/")) {
+      reject(new Error("Please choose an image file."));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      reject(new Error("Image is too large (max 8MB before compress)."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (!w || !h) {
+          reject(new Error("Could not read image dimensions."));
+          return;
+        }
+        const scale = Math.min(1, maxPx / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let out = "";
+        try {
+          out = canvas.toDataURL("image/webp", quality);
+        } catch (_) {
+          out = "";
+        }
+        if (!out || !out.startsWith("data:image/webp") || out.length > 140000) {
+          out = canvas.toDataURL("image/jpeg", quality);
+        }
+        if (out.length > 180000) {
+          out = canvas.toDataURL("image/jpeg", 0.55);
+        }
+        if (out.length > 220000) {
+          out = canvas.toDataURL("image/jpeg", 0.4);
+        }
+        resolve(out);
+      };
+      img.onerror = () => reject(new Error("Could not load that image."));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onAvatarPicked(e) {
+  const input = e.target;
+  const file = input.files && input.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await compressImageFile(file);
+    state.avatarDraft = dataUrl;
+    const preview = document.getElementById("avatarPreview");
+    if (preview) {
+      preview.innerHTML = avatarHTML({ id: "preview", name: "You", avatar: dataUrl }, "lg");
+    }
+    const clearBtn = document.getElementById("avatarClearBtn");
+    if (clearBtn) clearBtn.style.display = "inline-flex";
+  } catch (err) {
+    alert((err && err.message) || "Could not use that image.");
+  }
+  input.value = "";
+}
+
+function clearAvatarDraft() {
+  state.avatarDraft = null;
+  const preview = document.getElementById("avatarPreview");
+  if (preview) {
+    preview.innerHTML = avatarHTML({ id: "preview", name: "You", avatar: "" }, "lg");
+  }
+  const clearBtn = document.getElementById("avatarClearBtn");
+  if (clearBtn) clearBtn.style.display = "none";
+}
+
+function applyAvatarDraft(user) {
+  if (!user) return;
+  if (state.avatarDraft === null) user.avatar = "";
+  else if (typeof state.avatarDraft === "string") user.avatar = state.avatarDraft;
+  state.avatarDraft = undefined;
 }
 
 function profileBadgeHTML(u, opts) {
@@ -1338,7 +1503,10 @@ function profileBadgeHTML(u, opts) {
       ? `<span class="role-badge homeowner">Homeowner</span>`
       : "";
   if (opts && opts.nameOnly) return name;
-  return `<span class="poster-line"><span class="poster-name">${name}</span>${badge}</span>`;
+  const hideAv = opts && opts.hideAvatar;
+  const size = (opts && opts.avatarSize) || (showBadge ? "xs" : "sm");
+  const av = hideAv ? "" : avatarHTML(u, size);
+  return `<span class="poster-line">${av}<span class="poster-name">${name}</span>${badge}</span>`;
 }
 
 function authHTML(data) {
@@ -1394,6 +1562,7 @@ function authCreateHTML() {
         <div class="field"><label>Short bio (optional)</label>
           <textarea name="bio" rows="2" maxlength="280" placeholder="Kitchen remodel leftovers…"></textarea>
         </div>
+        ${avatarEditorHTML("", "You")}
         <button class="primary" type="submit">Create &amp; continue</button>
       </form>
     </div>`;
@@ -1443,7 +1612,7 @@ function authDemoHTML() {
             return `
               <button type="button" class="demo-card" onclick="loginAsDemo('${d.id}')">
                 <div class="row">
-                  <b>${escapeHtml(u.name)}</b>
+                  <span class="demo-card-user">${avatarHTML(u, "sm")}<b>${escapeHtml(u.name)}</b></span>
                   ${u.contractor ? `<span class="role-badge contractor">Contractor</span>` : u.admin ? `<span class="role-badge admin">Admin</span>` : `<span class="role-badge homeowner">Homeowner</span>`}
                 </div>
                 <div class="meta">${escapeHtml(u.email)} · ${escapeHtml(u.city)}, TX</div>
@@ -1470,6 +1639,7 @@ function enterSession(data, userId) {
   state.listingId = null;
   state.threadId = null;
   state.editingProfile = false;
+  state.avatarDraft = undefined;
   state.authScreen = "welcome";
   const u = data.users[userId];
   state.searchZip = (u && u.zip) || null;
@@ -1523,10 +1693,12 @@ function submitCreateProfile(e) {
     zip,
     bio,
     company: contractor ? company : "",
+    avatar: "",
     profileComplete: true,
     admin: false,
     blocked: []
   };
+  applyAvatarDraft(data.users[id]);
   enterSession(data, id);
 }
 
@@ -1566,6 +1738,7 @@ function logout() {
   db.save(data);
   state.authScreen = "welcome";
   state.editingProfile = false;
+  state.avatarDraft = undefined;
   state.view = "browse";
   state.listingId = null;
   state.threadId = null;
@@ -1620,6 +1793,7 @@ function submitEditProfile(e) {
     }
     me.password = demoHash(newPw);
   }
+  applyAvatarDraft(me);
   db.save(data);
   state.editingProfile = false;
   render();
@@ -2370,8 +2544,8 @@ function messagesHTML(data) {
           const offer = t.offerId ? offerById(data, t.offerId) : null;
           return `
             <button class="thread-item ${unread ? "has-unread" : ""} ${blocked ? "blocked-thread" : ""}" onclick="goThread('${t.id}')">
-              <div class="row">
-                <b>${escapeHtml((other && other.name) || "User")}${blocked ? ' <span class="status-chip Rejected">Blocked</span>' : ""}</b>
+              <div class="row thread-item-head">
+                <span class="thread-item-user">${avatarHTML(other, "sm")}<b>${escapeHtml((other && other.name) || "User")}${blocked ? ' <span class="status-chip Rejected">Blocked</span>' : ""}</b></span>
                 <span class="meta">${last ? new Date(last.at).toLocaleString() : ""}</span>
               </div>
               <div class="meta">${escapeHtml((listing && listing.title) || "Listing")}${
@@ -2419,7 +2593,8 @@ function threadHTML(data) {
     <div class="thread-view">
       <button class="ghost" onclick="go('messages')">← Messages</button>
       <div class="panel thread-header">
-        <div class="row">
+        <div class="row thread-header-row">
+          ${avatarHTML(other, "md")}
           <div>
             <h2 style="margin:0">${escapeHtml((other && other.name) || "User")}</h2>
             <div class="meta">
@@ -2909,10 +3084,11 @@ function accountHTML(data) {
   if (state.editingProfile) {
     return `
       <div class="panel" style="max-width:640px">
-        <button class="ghost" onclick="state.editingProfile=false; render()">← Back</button>
+        <button class="ghost" onclick="state.editingProfile=false; state.avatarDraft=undefined; render()">← Back</button>
         <h2>Edit profile</h2>
         <div class="warn">Demo only: password changes stay in this browser.</div>
         <form onsubmit="submitEditProfile(event)">
+          ${avatarEditorHTML(me.avatar || "", me.name || "You")}
           <div class="field"><label>Name *</label>
             <input name="name" required maxlength="60" value="${escapeAttr(me.name)}" />
           </div>
@@ -2954,8 +3130,13 @@ function accountHTML(data) {
   return `
     <div class="panel" style="max-width:640px">
       <h2>Account</h2>
-      <div class="ok" style="margin-bottom:12px">${profileBadgeHTML(me)}</div>
-      <p class="meta">${escapeHtml(me.email || "—")} · ${escapeHtml(me.city || "—")}, TX ${escapeHtml(me.zip || "")}</p>
+      <div class="account-hero">
+        ${avatarHTML(me, "lg")}
+        <div>
+          <div class="ok" style="margin-bottom:6px">${profileBadgeHTML(me, { hideAvatar: true })}</div>
+          <p class="meta" style="margin:0">${escapeHtml(me.email || "—")} · ${escapeHtml(me.city || "—")}, TX ${escapeHtml(me.zip || "")}</p>
+        </div>
+      </div>
       ${me.company ? `<p class="meta">Company: ${escapeHtml(me.company)}</p>` : ""}
       ${me.bio ? `<p>${escapeHtml(me.bio)}</p>` : ""}
       <p>Active listings: ${count} / 3 free</p>
@@ -2964,11 +3145,13 @@ function accountHTML(data) {
       ${blockedNote}
       <div class="actions">
         <button class="ghost" onclick="go('mine')">My listings</button>
-        <button class="ghost" onclick="state.editingProfile=true; render()">Edit profile</button>
+        <button class="ghost" onclick="state.editingProfile=true; state.avatarDraft=undefined; render()">Edit profile</button>
         <button class="primary" onclick="toggleSub()">${
           me.subscribed ? "Cancel extra-listing plan" : "Upgrade $3.99/month"
         }</button>
-        <button class="danger" onclick="logout()">Log out</button>
+      </div>
+      <div class="actions signout-row">
+        <button class="danger signout-btn" type="button" onclick="logout()">Sign out</button>
       </div>
       <div class="panel" style="margin-top:16px;background:#f3eee4;box-shadow:none">
         <h3 style="margin-top:0;font-size:16px">Blocked users</h3>
@@ -3044,6 +3227,7 @@ function resetDemo() {
     pickOfferedId: null,
     authScreen: "welcome",
     editingProfile: false,
+    avatarDraft: undefined,
     reportTarget: null,
     filtersOpen: false
   };
