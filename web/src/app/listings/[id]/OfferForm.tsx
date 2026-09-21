@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+// TODO(phase2): dedicated /messages inbox to read threads created here.
 export function OfferForm({ listingId }: { listingId: string }) {
   const router = useRouter();
   const [message, setMessage] = useState("");

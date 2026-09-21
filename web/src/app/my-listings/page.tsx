@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { primaryPhotoUrl, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export default async function MyListingsPage() {
           <table className="table">
             <thead>
               <tr>
+                <th></th>
                 <th>Title</th>
                 <th>Status</th>
                 <th>Intent</th>
@@ -57,23 +59,43 @@ export default async function MyListingsPage() {
               </tr>
             </thead>
             <tbody>
-              {listings.map((l) => (
-                <tr key={l.id}>
-                  <td>
-                    <Link href={`/listings/${l.id}`}>{l.title}</Link>
-                    {l.status === "Rejected" && l.reject_reason ? (
-                      <div className="help">Rejected: {l.reject_reason}</div>
-                    ) : null}
-                  </td>
-                  <td>
-                    <span className="status-chip">{l.status}</span>
-                  </td>
-                  <td>{l.intent}</td>
-                  <td>
-                    {l.city}, {l.zip}
-                  </td>
-                </tr>
-              ))}
+              {listings.map((l) => {
+                const thumb = primaryPhotoUrl(l.listing_photos);
+                const photoCount = l.listing_photos?.length ?? 0;
+                return (
+                  <tr key={l.id}>
+                    <td style={{ width: 56 }}>
+                      <div
+                        className="thumb"
+                        style={{
+                          height: 44,
+                          width: 44,
+                          borderRadius: 8,
+                          backgroundImage: thumb ? `url(${thumb})` : undefined,
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <Link href={`/listings/${l.id}`}>{l.title}</Link>
+                      <div className="help">
+                        {photoCount} photo{photoCount === 1 ? "" : "s"}
+                      </div>
+                      {l.status === "Rejected" && l.reject_reason ? (
+                        <div className="help">Rejected: {l.reject_reason}</div>
+                      ) : null}
+                    </td>
+                    <td>
+                      <span className={`status-chip ${statusChipClass(l.status)}`}>
+                        {l.status}
+                      </span>
+                    </td>
+                    <td>{l.intent}</td>
+                    <td>
+                      {l.city}, {l.zip}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

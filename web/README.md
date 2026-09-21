@@ -82,11 +82,17 @@ Replace `you@example.com` with the email you used to sign up.
 | `/admin` | Approve/reject + reports (`is_admin`) |
 | `/account` | Profile + avatar (`avatars` / `${userId}/…`) |
 
+## Live marketplace (Supabase-backed)
+
+Browse, listing detail, post (+ photos), my listings, and admin approve/reject
+read/write `renoswap-prod` via the anon key + RLS. No localStorage in `web/`.
+
 ## Phase 1 TODOs (deferred)
 
 - Stripe $3.99/mo for 4+ active listings
 - Near-me ZIP/radius ranking
 - Push / in-app notifications while closed
+- Messaging inbox UI (offers/threads/messages tables + OfferForm write path exist)
 
 ## Static demo
 

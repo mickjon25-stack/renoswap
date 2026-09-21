@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ export default function PostPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
 
   const [form, setForm] = useState({
@@ -32,6 +33,29 @@ export default function PostPage() {
     dumpster_bound: false,
     fast_window_hours: "24",
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!hasSupabaseConfig()) {
+        setAuthChecked(true);
+        return;
+      }
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        router.replace("/auth");
+        return;
+      }
+      setAuthChecked(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -61,6 +85,7 @@ export default function PostPage() {
     }
 
     setLoading(true);
+    let createdListingId: string | null = null;
     try {
       const supabase = createClient();
       const {
@@ -99,6 +124,7 @@ export default function PostPage() {
         .select("id")
         .single();
       if (insertErr) throw insertErr;
+      createdListingId = listing.id;
 
       const max = Math.min(files.length, 6);
       for (let i = 0; i < max; i++) {
@@ -129,10 +155,26 @@ export default function PostPage() {
       router.push("/my-listings");
       router.refresh();
     } catch (err) {
+      if (createdListingId && hasSupabaseConfig()) {
+        try {
+          const supabase = createClient();
+          await supabase.from("listings").delete().eq("id", createdListingId);
+        } catch {
+          // best-effort rollback so we don't leave photo-less pending listings
+        }
+      }
       setError(err instanceof Error ? err.message : "Failed to post listing");
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!authChecked) {
+    return (
+      <div className="wrap">
+        <div className="panel empty">Checking sign-in…</div>
+      </div>
+    );
   }
 
   return (

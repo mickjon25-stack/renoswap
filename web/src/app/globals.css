@@ -125,10 +125,11 @@ label { display: block; font-family: var(--font-ui); font-size: 12px; font-weigh
   display: inline-block; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
   padding: 3px 8px; border-radius: 999px; background: #efe6d6;
 }
-.status-chip.Approved { background: var(--green-soft); color: var(--green); }
-.status-chip.Rejected { background: #f3d6d6; color: var(--danger); }
-.status-chip.Claimed { background: #2b241c; color: white; }
-.status-chip.Pending { background: #efe6d6; }
+.status-chip.approved { background: var(--green-soft); color: var(--green); }
+.status-chip.rejected { background: #f3d6d6; color: var(--danger); }
+.status-chip.claimed { background: #2b241c; color: white; }
+.status-chip.pending-review { background: #f8ead4; color: #8a5a12; }
+.status-chip.expired { background: #e8e2d8; color: var(--muted); }
 
 .detail-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
 @media (max-width: 800px) { .detail-grid { grid-template-columns: 1fr; } }

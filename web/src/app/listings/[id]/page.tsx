@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { sortedPhotos, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
 import { ReportForm } from "./ReportForm";
@@ -31,15 +32,15 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_photos(*), profiles:poster_id(id, display_name, avatar_url, city, company, is_contractor)")
+    .select(
+      "*, listing_photos(*), profiles:poster_id(id, display_name, avatar_url, city, company, is_contractor)"
+    )
     .eq("id", id)
     .maybeSingle();
 
   if (error || !data) notFound();
   const listing = data as Listing;
-  const photos = (listing.listing_photos || [])
-    .slice()
-    .sort((a, b) => a.sort_order - b.sort_order);
+  const photos = sortedPhotos(listing.listing_photos);
   const poster = listing.profiles;
 
   return (
@@ -68,7 +69,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <div className="panel">
             <div className="row">
               <h2 style={{ margin: 0 }}>{listing.title}</h2>
-              <span className={`status-chip ${listing.status.replace(/ /g, "\u00a0")}`}>
+              <span className={`status-chip ${statusChipClass(listing.status)}`}>
                 {listing.status}
               </span>
             </div>
@@ -121,6 +122,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           {user && user.id !== listing.poster_id && listing.status === "Approved" ? (
             <div className="panel">
               <h3 style={{ marginTop: 0 }}>Make an offer / message</h3>
+              {/* TODO(phase2): dedicated inbox UI for threads/messages */}
               <OfferForm listingId={listing.id} />
             </div>
           ) : null}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
+import { primaryPhotoUrl } from "@/lib/listing-ui";
 
 function intentClass(intent: string) {
   if (intent === "Fast & Free") return "free";
@@ -8,9 +9,7 @@ function intentClass(intent: string) {
 }
 
 export function ListingCard({ listing }: { listing: Listing }) {
-  const photo =
-    listing.listing_photos?.slice().sort((a, b) => a.sort_order - b.sort_order)[0]
-      ?.public_url || undefined;
+  const photo = primaryPhotoUrl(listing.listing_photos);
 
   return (
     <Link href={`/listings/${listing.id}`} className="card">
