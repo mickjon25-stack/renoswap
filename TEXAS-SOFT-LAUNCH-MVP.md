@@ -1,8 +1,14 @@
 # RenoSwap — Texas soft-launch MVP
 
-**Status:** Draft for Michael (Product)  
+**Status:** Locked soft-launch MVP (2026-09-21) — access model (invite vs open) TBD later  
 **Date:** 2026-09-21  
 **Live clickable spec:** https://renoswap.com (browser demo; localStorage — not multi-user yet)
+
+## Locked decisions
+- Phase A outreach: **greater Austin + San Antonio**
+- Product geography: **any Texas ZIP** (statewide product, focused outreach)
+- Access model (invite/waitlist vs open): **TBD later**
+- MVP must-haves / non-goals: **as written in this doc**
 
 ## North star
 A Texas-first marketplace where leftover **renovation / home-construction materials** get swapped or sold instead of dumped. **Swap is the main action**; selling is allowed. Not a garage-sale app.
@@ -67,8 +73,8 @@ Replace localStorage demo with:
 
 ## Open decisions (Michael)
 - [x] Confirm Phase A metros — **greater Austin + San Antonio** (locked 2026-09-21).
-- [ ] Invite-only vs open TX from day one.
-- [ ] Self-serve signup vs waitlist.
+- [ ] Invite-only vs open TX from day one — **deferred** (decide later).
+- [ ] Self-serve signup vs waitlist — **deferred** with access model.
 - [ ] Who runs admin queue daily at launch.
 - [ ] Target date window for foundation + soft launch (no rush — quality first).
 
