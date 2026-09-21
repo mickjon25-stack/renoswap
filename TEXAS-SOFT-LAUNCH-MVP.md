@@ -27,11 +27,9 @@ Prove that enough homeowners and contractors in a tight geography will:
 **Contractor badge:** Keep in MVP as **self-reported** + company name required; verify later.
 
 ## Where (geography)
-**Phase A (soft launch):** Central / South-Central Texas corridor where seed demo already feels natural — e.g. **Austin–San Antonio–Houston fringe + Hill Country / Gonzales–La Grange–Shiner style towns**, enforced by **Texas ZIP only**.  
+**Phase A (soft launch) — LOCKED:** Outreach focus = **greater Austin + San Antonio**. Product still accepts **any Texas ZIP** so nearby/rural leftovers aren’t blocked.  
 **Phase B:** Rest of Texas.  
 **Out until later:** Other states.
-
-*Recommendation:* Soft-launch marketing and outreach in **2 metros max** (e.g. greater Austin + San Antonio) while the product still accepts any TX ZIP so rural leftovers aren’t blocked.
 
 ## Must-have for real multi-user MVP
 Replace localStorage demo with:
@@ -68,7 +66,7 @@ Replace localStorage demo with:
 5. Soft launch checklist + monitoring (errors, report volume, approval latency).
 
 ## Open decisions (Michael)
-- [ ] Confirm Phase A metros (Austin+SA vs Houston vs other).
+- [x] Confirm Phase A metros — **greater Austin + San Antonio** (locked 2026-09-21).
 - [ ] Invite-only vs open TX from day one.
 - [ ] Self-serve signup vs waitlist.
 - [ ] Who runs admin queue daily at launch.
