@@ -7,7 +7,7 @@ Mirrors the locked [Texas soft-launch MVP](../TEXAS-SOFT-LAUNCH-MVP.md) and the 
 ## Prerequisites
 
 - Node 20+
-- A [Supabase](https://supabase.com) project
+- A [Supabase](https://supabase.com) project (live: `renoswap-prod`)
 
 ## Local setup
 
@@ -31,7 +31,24 @@ export NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeh
 npm run build
 ```
 
+## Supabase Auth URL configuration (required for local email auth)
+
+In the Supabase dashboard for **renoswap-prod** → **Authentication** → **URL Configuration**:
+
+1. **Site URL:** `http://localhost:3000`
+2. **Redirect URLs** — include at least:
+   - `http://localhost:3000/auth/callback`
+   - (optional) `http://localhost:3000/**`
+
+Without these, email confirmation / magic-link redirects will fail after signup.
+
+When you deploy later, add the production site URL and `https://YOUR_DOMAIN/auth/callback` as well.
+
 ## Apply migrations (Supabase SQL editor)
+
+Schema + RLS + buckets are already applied on the live project. **Do not drop/recreate tables.**
+
+If bootstrapping a fresh project:
 
 1. Open your Supabase project → **SQL Editor**.
 2. Paste the contents of `supabase/migrations/20260921_001_initial_schema.sql`.
@@ -42,7 +59,7 @@ npm run build
    - Trigger to auto-create a profile on signup
    - `is_texas_zip()` helper (prefixes 750–799, 733, 885)
 
-4. Make yourself admin (after you sign up once):
+### Make yourself admin (after first signup)
 
 ```sql
 update public.profiles
@@ -50,17 +67,20 @@ set is_admin = true, role = 'Admin'
 where email = 'you@example.com';
 ```
 
+Replace `you@example.com` with the email you used to sign up.
+
 ## App routes
 
 | Path | Purpose |
 |------|---------|
 | `/auth` | Sign up / sign in |
+| `/auth/callback` | PKCE email-confirm / OAuth code exchange |
 | `/browse` | Approved listings + filters |
 | `/listings/[id]` | Detail, offer/message, report |
-| `/post` | Create listing + photo upload |
+| `/post` | Create listing + photo upload (`listing-photos` / `${userId}/…`) |
 | `/my-listings` | Poster’s listings + status |
 | `/admin` | Approve/reject + reports (`is_admin`) |
-| `/account` | Profile + avatar |
+| `/account` | Profile + avatar (`avatars` / `${userId}/…`) |
 
 ## Phase 1 TODOs (deferred)
 

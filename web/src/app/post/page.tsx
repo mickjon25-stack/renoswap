@@ -4,6 +4,10 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import {
+  hasSupabaseConfig,
+  MISSING_SUPABASE_ENV_MESSAGE,
+} from "@/lib/supabase/env";
 import { CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
 import { texasZipError } from "@/lib/texas-zip";
 
@@ -37,6 +41,11 @@ export default function PostPage() {
     e.preventDefault();
     setError(null);
 
+    if (!hasSupabaseConfig()) {
+      setError(MISSING_SUPABASE_ENV_MESSAGE);
+      return;
+    }
+
     const zipErr = texasZipError(form.zip);
     if (zipErr) {
       setError(zipErr);
@@ -44,6 +53,10 @@ export default function PostPage() {
     }
     if (!form.title.trim() || !form.city.trim()) {
       setError("Title and city are required.");
+      return;
+    }
+    if (!files || files.length < 1) {
+      setError("Add at least one photo (up to 6). Photos are required for listings.");
       return;
     }
 
@@ -87,26 +100,30 @@ export default function PostPage() {
         .single();
       if (insertErr) throw insertErr;
 
-      if (files && files.length > 0) {
-        const max = Math.min(files.length, 6);
-        for (let i = 0; i < max; i++) {
-          const file = files[i];
-          const ext = file.name.split(".").pop() || "jpg";
-          const path = `${user.id}/${listing.id}/${i}.${ext}`;
-          const { error: upErr } = await supabase.storage
-            .from("listing-photos")
-            .upload(path, file, { upsert: true, contentType: file.type });
-          if (upErr) throw upErr;
-          const { data: pub } = supabase.storage
-            .from("listing-photos")
-            .getPublicUrl(path);
-          await supabase.from("listing_photos").insert({
-            listing_id: listing.id,
-            storage_path: path,
-            public_url: pub.publicUrl,
-            sort_order: i,
+      const max = Math.min(files.length, 6);
+      for (let i = 0; i < max; i++) {
+        const file = files[i];
+        const ext = (file.name.split(".").pop() || "jpg")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+        const path = `${user.id}/${listing.id}/${i}.${ext || "jpg"}`;
+        const { error: upErr } = await supabase.storage
+          .from("listing-photos")
+          .upload(path, file, {
+            upsert: true,
+            contentType: file.type || "image/jpeg",
           });
-        }
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage
+          .from("listing-photos")
+          .getPublicUrl(path);
+        const { error: photoErr } = await supabase.from("listing_photos").insert({
+          listing_id: listing.id,
+          storage_path: path,
+          public_url: pub.publicUrl,
+          sort_order: i,
+        });
+        if (photoErr) throw photoErr;
       }
 
       router.push("/my-listings");
@@ -126,6 +143,9 @@ export default function PostPage() {
           Listings start as <strong>Pending Review</strong>. Admins approve before
           they appear on Browse. Texas ZIP required.
         </p>
+        {!hasSupabaseConfig() ? (
+          <div className="err">{MISSING_SUPABASE_ENV_MESSAGE}</div>
+        ) : null}
         {error ? <div className="err">{error}</div> : null}
         <form onSubmit={onSubmit}>
           <div className="field">
@@ -268,15 +288,19 @@ export default function PostPage() {
             </label>
           </div>
           <div className="field">
-            <label htmlFor="photos">Photos (up to 6)</label>
+            <label htmlFor="photos">Photos (required, up to 6)</label>
             <input
               id="photos"
               type="file"
               accept="image/*"
               multiple
+              required
               onChange={(e) => setFiles(e.target.files)}
             />
-            <p className="help">Stored in Supabase Storage bucket listing-photos.</p>
+            <p className="help">
+              Stored in bucket <code>listing-photos</code> at{" "}
+              <code>{"${userId}/${listingId}/…"}</code>. Prefer 3+ clear photos.
+            </p>
           </div>
           <div className="actions">
             <button className="primary" type="submit" disabled={loading}>

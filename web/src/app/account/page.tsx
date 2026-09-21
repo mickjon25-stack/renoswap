@@ -4,11 +4,17 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import {
+  hasSupabaseConfig,
+  MISSING_SUPABASE_ENV_MESSAGE,
+} from "@/lib/supabase/env";
 import { texasZipError } from "@/lib/texas-zip";
 import type { Profile } from "@/lib/types";
 
 export default function AccountPage() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,6 +36,10 @@ export default function AccountPage() {
     let cancelled = false;
     (async () => {
       try {
+        if (!hasSupabaseConfig()) {
+          setError(MISSING_SUPABASE_ENV_MESSAGE);
+          return;
+        }
         const supabase = createClient();
         const {
           data: { user },
@@ -38,12 +48,38 @@ export default function AccountPage() {
           router.push("/auth");
           return;
         }
-        const { data, error: err } = await supabase
+        if (cancelled) return;
+        setUserId(user.id);
+        setUserEmail(user.email ?? null);
+
+        const { data: existing, error: err } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .maybeSingle();
         if (err) throw err;
+
+        let data = existing;
+        if (!data) {
+          const displayName =
+            (user.user_metadata?.display_name as string | undefined) ||
+            (user.email ? user.email.split("@")[0] : "user");
+          const { data: created, error: upErr } = await supabase
+            .from("profiles")
+            .upsert(
+              {
+                id: user.id,
+                email: user.email ?? null,
+                display_name: displayName,
+              },
+              { onConflict: "id" }
+            )
+            .select("*")
+            .single();
+          if (upErr) throw upErr;
+          data = created;
+        }
+
         if (!cancelled && data) {
           const p = data as Profile;
           setProfile(p);
@@ -74,52 +110,90 @@ export default function AccountPage() {
     e.preventDefault();
     setError(null);
     setOk(null);
+
+    if (!hasSupabaseConfig()) {
+      setError(MISSING_SUPABASE_ENV_MESSAGE);
+      return;
+    }
+    if (!userId) {
+      setError("Not signed in.");
+      return;
+    }
+
     const zipErr = form.zip ? texasZipError(form.zip) : null;
     if (zipErr) {
       setError(zipErr);
       return;
     }
-    if (!profile) return;
+    if (!form.display_name.trim()) {
+      setError("Display name is required.");
+      return;
+    }
+    if (form.is_contractor && !form.company.trim()) {
+      setError("Company name is required for contractors.");
+      return;
+    }
+
     setSaving(true);
     try {
       const supabase = createClient();
-      let avatar_url = profile.avatar_url;
+      let avatar_url = profile?.avatar_url ?? null;
 
       if (avatarFile) {
-        const ext = avatarFile.name.split(".").pop() || "jpg";
-        const path = `${profile.id}/avatar.${ext}`;
+        const ext = (avatarFile.name.split(".").pop() || "jpg")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+        const path = `${userId}/avatar.${ext || "jpg"}`;
         const { error: upErr } = await supabase.storage
           .from("avatars")
-          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+          .upload(path, avatarFile, {
+            upsert: true,
+            contentType: avatarFile.type || "image/jpeg",
+          });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-        avatar_url = pub.publicUrl;
+        // Bust CDN cache after overwrite.
+        avatar_url = `${pub.publicUrl}?t=${Date.now()}`;
       }
 
-      const role = form.is_contractor ? "Contractor" : form.role === "Admin" ? "Admin" : "Homeowner";
+      // Never demote an admin via the account form.
+      const role =
+        profile?.is_admin || form.role === "Admin"
+          ? "Admin"
+          : form.is_contractor
+            ? "Contractor"
+            : "Homeowner";
       const profile_complete = Boolean(
         form.display_name.trim() && form.city.trim() && form.zip.trim()
       );
 
       const { data, error: err } = await supabase
         .from("profiles")
-        .update({
-          display_name: form.display_name.trim(),
-          city: form.city.trim(),
-          zip: form.zip.trim(),
-          bio: form.bio.trim(),
-          company: form.is_contractor ? form.company.trim() : "",
-          role,
-          is_contractor: form.is_contractor,
-          avatar_url,
-          profile_complete,
-        })
-        .eq("id", profile.id)
+        .upsert(
+          {
+            id: userId,
+            email: userEmail,
+            display_name: form.display_name.trim(),
+            city: form.city.trim(),
+            zip: form.zip.trim(),
+            bio: form.bio.trim(),
+            company: form.is_contractor ? form.company.trim() : "",
+            role,
+            is_contractor: form.is_contractor,
+            avatar_url,
+            profile_complete,
+          },
+          { onConflict: "id" }
+        )
         .select("*")
         .single();
       if (err) throw err;
       setProfile(data as Profile);
-      setOk("Profile saved.");
+      setOk(
+        profile_complete
+          ? "Profile saved."
+          : "Saved. Add city and Texas ZIP to mark your profile complete."
+      );
       setAvatarFile(null);
       router.refresh();
     } catch (e) {
@@ -148,13 +222,21 @@ export default function AccountPage() {
             </button>
           </form>
         </div>
-        <p className="help">Photo, city, and Texas ZIP — editable anytime.</p>
+        <p className="help">
+          Photo, city, and Texas ZIP — editable anytime. Profile is complete when
+          display name, city, and ZIP are set.
+        </p>
         {error ? <div className="err">{error}</div> : null}
         {ok ? <div className="ok">{ok}</div> : null}
 
         {profile?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="avatar" src={profile.avatar_url} alt="" style={{ marginBottom: 12 }} />
+          <img
+            className="avatar"
+            src={profile.avatar_url}
+            alt=""
+            style={{ marginBottom: 12 }}
+          />
         ) : (
           <div className="avatar" style={{ marginBottom: 12 }} />
         )}
@@ -228,6 +310,10 @@ export default function AccountPage() {
               accept="image/*"
               onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
             />
+            <p className="help">
+              Uploaded to bucket <code>avatars</code> at{" "}
+              <code>{"${userId}/avatar.*"}</code>.
+            </p>
           </div>
           <div className="actions">
             <button className="primary" type="submit" disabled={saving}>
