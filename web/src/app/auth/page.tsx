@@ -49,10 +49,24 @@ function AuthForm() {
     }
   }, [searchParams]);
 
-  async function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    // Read the live form values as a fallback for browser/automation fills that
+    // update the DOM before React receives the corresponding input event.
+    const formData = new FormData(e.currentTarget);
+    const submittedEmail = String(formData.get("email") ?? "").trim();
+    const submittedPassword = String(formData.get("password") ?? "");
+    const submittedDisplayName = String(formData.get("displayName") ?? "");
+    const currentEmail = submittedEmail || email.trim();
+    const currentPassword = submittedPassword || password;
+    const currentDisplayName = submittedDisplayName || displayName;
+
+    setEmail(currentEmail);
+    setPassword(currentPassword);
+    setDisplayName(currentDisplayName);
 
     if (!configured) {
       setError(MISSING_SUPABASE_ENV_MESSAGE);
@@ -62,13 +76,13 @@ function AuthForm() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const name = displayName.trim() || email.split("@")[0];
+      const name = currentDisplayName.trim() || currentEmail.split("@")[0];
 
       if (mode === "signup") {
         const origin = window.location.origin;
         const { data, error: err } = await supabase.auth.signUp({
-          email,
-          password,
+          email: currentEmail,
+          password: currentPassword,
           options: {
             data: { display_name: name },
             emailRedirectTo: `${origin}/auth/callback?next=/account`,
@@ -92,8 +106,8 @@ function AuthForm() {
         setMode("signin");
       } else {
         const { data, error: err } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: currentEmail,
+          password: currentPassword,
         });
         if (err) throw err;
         if (data.user) {
@@ -102,7 +116,7 @@ function AuthForm() {
             data.user.id,
             data.user.email,
             (data.user.user_metadata?.display_name as string) ||
-              email.split("@")[0]
+              currentEmail.split("@")[0]
           );
         }
         router.push("/browse");
@@ -134,8 +148,9 @@ function AuthForm() {
             <label htmlFor="name">Display name</label>
             <input
               id="name"
+              name="displayName"
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onInput={(e) => setDisplayName(e.currentTarget.value)}
               placeholder="Alex"
             />
           </div>
@@ -144,10 +159,11 @@ function AuthForm() {
           <label htmlFor="email">Email</label>
           <input
             id="email"
+            name="email"
             type="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onInput={(e) => setEmail(e.currentTarget.value)}
             autoComplete="email"
           />
         </div>
@@ -155,11 +171,12 @@ function AuthForm() {
           <label htmlFor="password">Password</label>
           <input
             id="password"
+            name="password"
             type="password"
             required
             minLength={6}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onInput={(e) => setPassword(e.currentTarget.value)}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
           />
         </div>
