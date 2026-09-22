@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { resolveClientUser } from "@/lib/supabase/client-auth";
 import {
   hasSupabaseConfig,
   MISSING_SUPABASE_ENV_MESSAGE,
@@ -40,10 +41,7 @@ export default function AccountPage() {
           setError(MISSING_SUPABASE_ENV_MESSAGE);
           return;
         }
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const user = await resolveClientUser();
         if (!user) {
           router.push("/auth");
           return;
@@ -52,6 +50,7 @@ export default function AccountPage() {
         setUserId(user.id);
         setUserEmail(user.email ?? null);
 
+        const supabase = createClient();
         const { data: existing, error: err } = await supabase
           .from("profiles")
           .select("*")

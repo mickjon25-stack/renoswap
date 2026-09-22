@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { resolveClientUser } from "@/lib/supabase/client-auth";
 import {
   hasSupabaseConfig,
   MISSING_SUPABASE_ENV_MESSAGE,
@@ -37,20 +38,23 @@ export default function PostPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!hasSupabaseConfig()) {
+      try {
+        if (!hasSupabaseConfig()) {
+          if (!cancelled) setAuthChecked(true);
+          return;
+        }
+        const user = await resolveClientUser();
+        if (cancelled) return;
+        if (!user) {
+          router.replace("/auth");
+          return;
+        }
         setAuthChecked(true);
-        return;
-      }
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (cancelled) return;
-      if (!user) {
+      } catch {
+        if (cancelled) return;
+        // Could not confirm a session — keep unsigned redirect strict.
         router.replace("/auth");
-        return;
       }
-      setAuthChecked(true);
     })();
     return () => {
       cancelled = true;
