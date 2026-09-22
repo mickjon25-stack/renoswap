@@ -27,6 +27,7 @@ export function Nav({
         {link("/browse", "Browse")}
         {link("/post", "Post")}
         {profile ? link("/my-listings", "My listings") : null}
+        {profile ? link("/inbox", "Inbox") : null}
         {profile?.is_admin ? link("/admin", "Admin") : null}
         {profile ? link("/account", "Account") : link("/auth", "Sign in")}
       </nav>

@@ -93,7 +93,6 @@ export default async function BrowsePage({
       </form>
 
       {/* TODO(phase2): near-me ZIP/radius ranking + notification matching */}
-      {/* TODO(phase2): messaging inbox UI for threads/offers — OfferForm creates rows but no inbox yet */}
 
       {fetchError ? <div className="err">{fetchError}</div> : null}
 

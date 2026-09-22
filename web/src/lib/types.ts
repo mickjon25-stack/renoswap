@@ -70,6 +70,7 @@ export type Thread = {
   participant_a: string;
   participant_b: string;
   created_at: string;
+  updated_at: string;
 };
 
 export type Message = {

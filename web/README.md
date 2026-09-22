@@ -78,21 +78,33 @@ Replace `you@example.com` with the email you used to sign up.
 | `/browse` | Approved listings + filters |
 | `/listings/[id]` | Detail, offer/message, report |
 | `/post` | Create listing + photo upload (`listing-photos` / `${userId}/…`) |
+| `/inbox` | Threads for signed-in user (listing title, counterparty, last preview) |
+| `/inbox/[id]` | Thread detail + reply (`messages` insert) |
 | `/my-listings` | Poster’s listings + status |
 | `/admin` | Approve/reject + reports (`is_admin`) |
 | `/account` | Profile + avatar (`avatars` / `${userId}/…`) |
 
 ## Live marketplace (Supabase-backed)
 
-Browse, listing detail, post (+ photos), my listings, and admin approve/reject
-read/write `renoswap-prod` via the anon key + RLS. No localStorage in `web/`.
+Browse, listing detail, post (+ photos), my listings, admin approve/reject, and
+inbox / thread messaging read/write `renoswap-prod` via the anon key + RLS.
+No localStorage in `web/`. OfferForm creates `offers` + `threads` + `messages`
+and deep-links into `/inbox/[id]`.
+
+### Smoke-test inbox (two users)
+
+1. User A posts a listing; admin approves it.
+2. User B (second browser / incognito) opens the listing → **Send offer**.
+3. User B lands on `/inbox/[threadId]` and can reply.
+4. User A opens **Inbox**, opens the same thread, replies; message persists after refresh.
+
+Same-account self-offer is blocked (participants must differ).
 
 ## Phase 1 TODOs (deferred)
 
 - Stripe $3.99/mo for 4+ active listings
 - Near-me ZIP/radius ranking
 - Push / in-app notifications while closed
-- Messaging inbox UI (offers/threads/messages tables + OfferForm write path exist)
 
 ## Static demo
 

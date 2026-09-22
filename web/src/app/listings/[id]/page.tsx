@@ -122,7 +122,10 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           {user && user.id !== listing.poster_id && listing.status === "Approved" ? (
             <div className="panel">
               <h3 style={{ marginTop: 0 }}>Make an offer / message</h3>
-              {/* TODO(phase2): dedicated inbox UI for threads/messages */}
+              <p className="help" style={{ marginTop: 0 }}>
+                Sends an offer and opens a thread in your{" "}
+                <Link href="/inbox">Inbox</Link>.
+              </p>
               <OfferForm listingId={listing.id} />
             </div>
           ) : null}
