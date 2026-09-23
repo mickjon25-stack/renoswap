@@ -321,6 +321,9 @@ export default function AccountPage() {
             <Link href="/my-listings" className="ghost">
               My listings
             </Link>
+            <Link href="/billing" className="ghost">
+              Billing
+            </Link>
           </div>
         </form>
       </div>

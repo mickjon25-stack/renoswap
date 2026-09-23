@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { primaryPhotoUrl } from "@/lib/listing-ui";
+import { isRecentlyBumped } from "@/lib/billing";
 
 function intentClass(intent: string) {
   if (intent === "Fast & Free") return "free";
@@ -25,6 +26,9 @@ export function ListingCard({ listing }: { listing: Listing }) {
         ) : null}
         {listing.status === "Pending Review" ? (
           <span className="badge status-pending">Pending</span>
+        ) : null}
+        {isRecentlyBumped(listing.bumped_at) ? (
+          <span className="badge claimed">Bumped</span>
         ) : null}
       </div>
       <div className="card-body">

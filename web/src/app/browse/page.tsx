@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { CATEGORIES, INTENTS } from "@/lib/constants";
 import type { Listing } from "@/lib/types";
+import { compareBrowseListings } from "@/lib/billing";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +47,9 @@ export default async function BrowsePage({
 
       const { data, error } = await query;
       if (error) fetchError = error.message;
-      else listings = (data as Listing[]) || [];
+      else {
+        listings = ((data as Listing[]) || []).slice().sort(compareBrowseListings);
+      }
     } catch (e) {
       fetchError = e instanceof Error ? e.message : "Failed to load listings";
     }

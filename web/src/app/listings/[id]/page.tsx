@@ -6,6 +6,8 @@ import { sortedPhotos, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
 import { ReportForm } from "./ReportForm";
+import { BumpButton } from "@/components/BumpButton";
+import { isRecentlyBumped } from "@/lib/billing";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +101,21 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         </div>
 
         <div className="stack">
+          {user && user.id === listing.poster_id ? (
+            <div className="panel">
+              <h3 style={{ marginTop: 0 }}>Boost this listing</h3>
+              <p className="help" style={{ marginTop: 0 }}>
+                {isRecentlyBumped(listing.bumped_at)
+                  ? "Currently boosted on Browse (within 7 days)."
+                  : "Pay once to sort this listing first on Browse for 7 days."}
+              </p>
+              <BumpButton
+                listingId={listing.id}
+                bumpedAt={listing.bumped_at}
+              />
+            </div>
+          ) : null}
+
           <div className="panel">
             <h3 style={{ marginTop: 0 }}>Poster</h3>
             <div className="row" style={{ justifyContent: "flex-start", gap: 12 }}>

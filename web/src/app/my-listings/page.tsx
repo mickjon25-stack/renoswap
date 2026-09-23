@@ -4,6 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { primaryPhotoUrl, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
+import { BumpButton } from "@/components/BumpButton";
+import {
+  FREE_LISTING_CAP,
+  isRecentlyBumped,
+  listingCapForPlan,
+} from "@/lib/billing";
+import { ACTIVE_STATUSES } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +29,12 @@ export default async function MyListingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan, plan_status")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data, error } = await supabase
     .from("listings")
     .select("*, listing_photos(*)")
@@ -29,6 +42,10 @@ export default async function MyListingsPage() {
     .order("created_at", { ascending: false });
 
   const listings = (data as Listing[]) || [];
+  const activeCount = listings.filter((l) =>
+    (ACTIVE_STATUSES as readonly string[]).includes(l.status)
+  ).length;
+  const cap = listingCapForPlan(profile?.plan, profile?.plan_status);
 
   return (
     <div className="wrap">
@@ -39,9 +56,9 @@ export default async function MyListingsPage() {
         </Link>
       </div>
       <p className="help" style={{ marginBottom: 16 }}>
-        {/* TODO(phase2): Stripe — 3 free active listings, then $3.99/mo */}
-        Free tier: up to 3 active listings (Pending / Approved / Claimed). Paid
-        upgrade coming later.
+        Active listings: {activeCount}/{cap} (Pending / Approved / Claimed). Free
+        tier is {FREE_LISTING_CAP}.{" "}
+        <Link href="/billing">Manage billing &amp; upgrades</Link>.
       </p>
       {error ? <div className="err">{error.message}</div> : null}
       {listings.length === 0 ? (
@@ -56,6 +73,7 @@ export default async function MyListingsPage() {
                 <th>Status</th>
                 <th>Intent</th>
                 <th>ZIP</th>
+                <th>Boost</th>
               </tr>
             </thead>
             <tbody>
@@ -92,6 +110,12 @@ export default async function MyListingsPage() {
                     <td>{l.intent}</td>
                     <td>
                       {l.city}, {l.zip}
+                      {isRecentlyBumped(l.bumped_at) ? (
+                        <div className="help">Bumped (7-day boost)</div>
+                      ) : null}
+                    </td>
+                    <td>
+                      <BumpButton listingId={l.id} bumpedAt={l.bumped_at} />
                     </td>
                   </tr>
                 );

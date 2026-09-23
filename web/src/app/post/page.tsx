@@ -9,8 +9,9 @@ import {
   hasSupabaseConfig,
   MISSING_SUPABASE_ENV_MESSAGE,
 } from "@/lib/supabase/env";
-import { CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
+import { ACTIVE_STATUSES, CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
 import { texasZipError } from "@/lib/texas-zip";
+import { FREE_LISTING_CAP, listingCapForPlan } from "@/lib/billing";
 
 export default function PostPage() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function PostPage() {
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
+  const [capBlocked, setCapBlocked] = useState(false);
+  const [capInfo, setCapInfo] = useState<{ active: number; cap: number } | null>(
+    null
+  );
 
   const [form, setForm] = useState({
     title: "",
@@ -100,7 +105,32 @@ export default function PostPage() {
         return;
       }
 
-      // TODO(phase2): enforce 3 free active listings then Stripe $3.99/mo
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan, plan_status")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const { count: activeCount, error: countErr } = await supabase
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("poster_id", user.id)
+        .in("status", [...ACTIVE_STATUSES]);
+      if (countErr) throw countErr;
+
+      const cap = listingCapForPlan(profile?.plan, profile?.plan_status);
+      const active = activeCount ?? 0;
+      setCapInfo({ active, cap });
+      if (active >= cap) {
+        setCapBlocked(true);
+        setError(
+          `You've reached your active listing limit (${active}/${cap}). Upgrade on Billing to post more.`
+        );
+        setLoading(false);
+        return;
+      }
+      setCapBlocked(false);
+
       const price =
         form.intent === "Fast & Free" || form.intent === "Swap"
           ? 0
@@ -193,6 +223,16 @@ export default function PostPage() {
           <div className="err">{MISSING_SUPABASE_ENV_MESSAGE}</div>
         ) : null}
         {error ? <div className="err">{error}</div> : null}
+        {capBlocked ? (
+          <div className="warn" style={{ marginBottom: 12 }}>
+            Free tier is {FREE_LISTING_CAP} active listings
+            {capInfo ? ` (you have ${capInfo.active}/${capInfo.cap})` : ""}.
+            {" "}
+            <Link href="/billing" className="primary" style={{ marginLeft: 8 }}>
+              Upgrade on Billing
+            </Link>
+          </div>
+        ) : null}
         <form onSubmit={onSubmit}>
           <div className="field">
             <label htmlFor="title">Title</label>

@@ -1,5 +1,7 @@
 import type { Intent, ListingStatus } from "./constants";
 
+export type PlanId = "free" | "homeowner" | "contractor";
+
 export type Profile = {
   id: string;
   display_name: string;
@@ -14,6 +16,10 @@ export type Profile = {
   is_contractor: boolean;
   profile_complete: boolean;
   subscribed: boolean;
+  stripe_customer_id?: string | null;
+  plan?: PlanId | string;
+  plan_status?: string;
+  plan_period_end?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -38,6 +44,7 @@ export type Listing = {
   reject_reason: string;
   approved_at: string | null;
   expires_at: string | null;
+  bumped_at?: string | null;
   created_at: string;
   updated_at: string;
   listing_photos?: ListingPhoto[];

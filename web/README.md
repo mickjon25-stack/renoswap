@@ -83,6 +83,7 @@ Replace `you@example.com` with the email you used to sign up.
 | `/my-listings` | Poster’s listings + status |
 | `/admin` | Approve/reject + reports (`is_admin`) |
 | `/account` | Profile + avatar (`avatars` / `${userId}/…`) |
+| `/billing` | Plans, Stripe Checkout, Customer Portal, bump info |
 
 ## Live marketplace (Supabase-backed)
 
@@ -100,9 +101,52 @@ and deep-links into `/inbox/[id]`.
 
 Same-account self-offer is blocked (participants must differ).
 
-## Phase 1 TODOs (deferred)
+## Monetization (Stripe)
 
-- Stripe $3.99/mo for 4+ active listings
+Pricing (locked):
+
+| Product | Amount | Effect |
+|---------|--------|--------|
+| Free | $0 | 3 active listings (Pending Review + Approved + Claimed) |
+| Homeowner | $4.99/mo | Cap raised to **10** active listings |
+| Contractor | $19/mo | Cap **25** + `is_contractor` / Contractor role when subscribed |
+| Bump | $5 one-time | Sets `listings.bumped_at`; Browse sorts recent bumps (7 days) first |
+
+No materials payment / marketplace take-rate — Venmo/Zelle/cash stay off-platform.
+
+### Env vars
+
+See `.env.example`. Required for live billing:
+
+- `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (Test mode: `sk_test_…` / `pk_test_…`)
+- `STRIPE_WEBHOOK_SECRET` (from Stripe CLI or Dashboard webhook endpoint)
+- `STRIPE_PRICE_HOMEOWNER`, `STRIPE_PRICE_CONTRACTOR`, `STRIPE_PRICE_BUMP`
+- `SUPABASE_SERVICE_ROLE_KEY` — **server only**; webhook route uses it to update `profiles` / `listings.bumped_at` (RLS triggers block client writes to billing fields)
+
+### Create Stripe Products / Prices (Dashboard, Test mode)
+
+1. Open [Stripe Dashboard](https://dashboard.stripe.com/test/products) → **Products** → **Add product**.
+2. **Homeowner** — recurring monthly **$4.99** → copy Price id → `STRIPE_PRICE_HOMEOWNER`.
+3. **Contractor** — recurring monthly **$19.00** → `STRIPE_PRICE_CONTRACTOR`.
+4. **Listing bump** — one-time **$5.00** → `STRIPE_PRICE_BUMP`.
+5. Developers → **Webhooks** → Add endpoint `https://YOUR_DOMAIN/api/stripe/webhook` (local: `stripe listen --forward-to localhost:3000/api/stripe/webhook`).
+6. Subscribe to events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+7. Copy signing secret → `STRIPE_WEBHOOK_SECRET`.
+8. Enable Customer Portal (Settings → Billing → Customer portal) so **Manage billing** works.
+
+### Routes
+
+| Path | Purpose |
+|------|---------|
+| `/billing` | Plan cards, Subscribe (Checkout), Manage (Customer Portal) |
+| `/api/stripe/checkout` | Creates Checkout Session (subscription or bump payment) |
+| `/api/stripe/portal` | Stripe Customer Portal session |
+| `/api/stripe/webhook` | Applies plan / `bumped_at` via service role |
+
+Migration: `supabase/migrations/20260922_002_billing_stripe.sql` (applied on renoswap-prod).
+
+## Deferred
+
 - Near-me ZIP/radius ranking
 - Push / in-app notifications while closed
 
