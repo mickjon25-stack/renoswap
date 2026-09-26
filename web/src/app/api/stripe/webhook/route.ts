@@ -34,19 +34,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const admin = createServiceClient();
-
   try {
+    const admin = createServiceClient();
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutCompleted(admin, stripe, session);
         break;
       }
+      case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
-        await handleSubscriptionChange(admin, sub);
+        await handleSubscriptionChange(admin, stripe, sub);
         break;
       }
       default:
@@ -73,11 +73,13 @@ async function handleCheckoutCompleted(
   if (kind === "bump") {
     const listingId = session.metadata?.listing_id;
     if (!listingId) return;
-    const { error } = await admin
+    const { data, error } = await admin
       .from("listings")
       .update({ bumped_at: new Date().toISOString() })
-      .eq("id", listingId);
+      .eq("id", listingId)
+      .select("id");
     if (error) throw error;
+    if (!data?.length) throw new Error(`Boost: listing ${listingId} not updated`);
     return;
   }
 
@@ -101,9 +103,7 @@ async function handleCheckoutCompleted(
         : session.subscription.id;
     const sub = await stripe.subscriptions.retrieve(subId);
     status = sub.status;
-    periodEnd = sub.current_period_end
-      ? new Date(sub.current_period_end * 1000).toISOString()
-      : null;
+    periodEnd = subscriptionPeriodEnd(sub);
     const priceId = sub.items.data[0]?.price?.id;
     plan = plan || planFromPriceId(priceId);
     await applyPlanUpdate(admin, {
@@ -126,6 +126,7 @@ async function handleCheckoutCompleted(
 
 async function handleSubscriptionChange(
   admin: ReturnType<typeof createServiceClient>,
+  stripe: ReturnType<typeof getStripe>,
   sub: Stripe.Subscription
 ) {
   const userId =
@@ -145,14 +146,40 @@ async function handleSubscriptionChange(
   const planFromMeta = sub.metadata?.plan as PlanId | undefined;
   const plan = planFromMeta || planFromPriceId(priceId) || "free";
   const status = sub.status;
-  const periodEnd = sub.current_period_end
-    ? new Date(sub.current_period_end * 1000).toISOString()
-    : null;
+  const periodEnd = subscriptionPeriodEnd(sub);
 
   const canceled =
     status === "canceled" ||
     status === "unpaid" ||
     status === "incomplete_expired";
+
+  if (canceled) {
+    // If the customer still has another live subscription (e.g. switched
+    // Homeowner -> Contractor), keep that plan instead of dropping to free.
+    const others = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 10,
+    });
+    const live = others.data.find(
+      (s) => s.id !== sub.id && (s.status === "active" || s.status === "trialing")
+    );
+    if (live) {
+      const livePlan =
+        (live.metadata?.plan as PlanId | undefined) ||
+        planFromPriceId(live.items.data[0]?.price?.id);
+      if (livePlan === "homeowner" || livePlan === "contractor") {
+        await applyPlanUpdate(admin, {
+          userId,
+          customerId,
+          plan: livePlan,
+          status: live.status,
+          periodEnd: subscriptionPeriodEnd(live),
+        });
+        return;
+      }
+    }
+  }
 
   await applyPlanUpdate(admin, {
     userId,
@@ -161,6 +188,20 @@ async function handleSubscriptionChange(
     status: canceled ? "canceled" : status,
     periodEnd: canceled ? null : periodEnd,
   });
+}
+
+/**
+ * current_period_end lives on the subscription in older API versions and on
+ * each subscription item in 2025-03-31.basil+. Webhook payloads use the
+ * account's API version, so accept either shape.
+ */
+function subscriptionPeriodEnd(sub: Stripe.Subscription): string | null {
+  const raw = sub as unknown as {
+    current_period_end?: number;
+    items?: { data?: Array<{ current_period_end?: number }> };
+  };
+  const ts = raw.current_period_end ?? raw.items?.data?.[0]?.current_period_end;
+  return ts ? new Date(ts * 1000).toISOString() : null;
 }
 
 async function findUserIdByCustomer(
@@ -196,14 +237,32 @@ async function applyPlanUpdate(
     subscribed: paidActive,
   };
   if (args.customerId) patch.stripe_customer_id = args.customerId;
+
+  const { data: current, error: readErr } = await admin
+    .from("profiles")
+    .select("id, role, plan, is_contractor")
+    .eq("id", args.userId)
+    .maybeSingle();
+  if (readErr) throw readErr;
+  if (!current) throw new Error(`No profile for user ${args.userId}`);
+
   if (args.plan === "contractor" && paidActive) {
     patch.is_contractor = true;
-    patch.role = "Contractor";
+    // Never demote Admins; only relabel regular homeowners.
+    if (!current.role || current.role === "Homeowner") patch.role = "Contractor";
+  } else if (current.plan === "contractor" && patch.plan !== "contractor") {
+    // Leaving the Contractor plan removes the paid contractor flag.
+    patch.is_contractor = false;
+    if (current.role === "Contractor") patch.role = "Homeowner";
   }
 
-  const { error } = await admin
+  const { data, error } = await admin
     .from("profiles")
     .update(patch)
-    .eq("id", args.userId);
+    .eq("id", args.userId)
+    .select("id");
   if (error) throw error;
+  if (!data?.length) {
+    throw new Error(`Profile ${args.userId} not updated (check service role key)`);
+  }
 }

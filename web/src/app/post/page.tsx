@@ -157,7 +157,18 @@ export default function PostPage() {
         })
         .select("id")
         .single();
-      if (insertErr) throw insertErr;
+      if (insertErr) {
+        // Server-side cap (DB trigger listings_enforce_cap) is authoritative.
+        if (insertErr.message?.includes("listing_cap_reached")) {
+          setCapBlocked(true);
+          setError(
+            "You've reached your active listing limit. Upgrade on Billing to post more."
+          );
+          setLoading(false);
+          return;
+        }
+        throw insertErr;
+      }
       createdListingId = listing.id;
 
       const max = Math.min(files.length, 6);
@@ -225,8 +236,11 @@ export default function PostPage() {
         {error ? <div className="err">{error}</div> : null}
         {capBlocked ? (
           <div className="warn" style={{ marginBottom: 12 }}>
-            Free tier is {FREE_LISTING_CAP} active listings
-            {capInfo ? ` (you have ${capInfo.active}/${capInfo.cap})` : ""}.
+            {capInfo && capInfo.cap > FREE_LISTING_CAP
+              ? `Your plan allows ${capInfo.cap} active listings (you have ${capInfo.active}/${capInfo.cap}).`
+              : `Free tier is ${FREE_LISTING_CAP} active listings${
+                  capInfo ? ` (you have ${capInfo.active}/${capInfo.cap})` : ""
+                }.`}
             {" "}
             <Link href="/billing" className="primary" style={{ marginLeft: 8 }}>
               Upgrade on Billing

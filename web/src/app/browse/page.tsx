@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { CATEGORIES, INTENTS } from "@/lib/constants";
 import type { Listing } from "@/lib/types";
-import { compareBrowseListings } from "@/lib/billing";
+import { BUMP_WINDOW_DAYS, compareBrowseListings } from "@/lib/billing";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -30,25 +30,44 @@ export default async function BrowsePage({
   if (hasSupabaseConfig()) {
     try {
       const supabase = await createClient();
-      let query = supabase
-        .from("listings")
-        .select("*, listing_photos(*)")
-        .in("status", ["Approved", "Claimed"])
-        .order("created_at", { ascending: false })
-        .limit(60);
+      const build = () => {
+        let query = supabase
+          .from("listings")
+          .select("*, listing_photos(*)")
+          .in("status", ["Approved", "Claimed"]);
+        if (category) query = query.eq("category", category);
+        if (intent) query = query.eq("intent", intent);
+        if (q) {
+          query = query.or(
+            `title.ilike.%${q}%,description.ilike.%${q}%,city.ilike.%${q}%,looking_for.ilike.%${q}%`
+          );
+        }
+        return query;
+      };
 
-      if (category) query = query.eq("category", category);
-      if (intent) query = query.eq("intent", intent);
-      if (q) {
-        query = query.or(
-          `title.ilike.%${q}%,description.ilike.%${q}%,city.ilike.%${q}%,looking_for.ilike.%${q}%`
-        );
-      }
-
-      const { data, error } = await query;
+      // Recently boosted listings are fetched separately so an older boosted
+      // listing is not cut off by the newest-60 limit.
+      const boostCutoff = new Date(
+        Date.now() - BUMP_WINDOW_DAYS * 24 * 60 * 60 * 1000
+      ).toISOString();
+      const [recent, boosted] = await Promise.all([
+        build().order("created_at", { ascending: false }).limit(60),
+        build()
+          .gte("bumped_at", boostCutoff)
+          .order("bumped_at", { ascending: false })
+          .limit(24),
+      ]);
+      const error = recent.error || boosted.error;
       if (error) fetchError = error.message;
       else {
-        listings = ((data as Listing[]) || []).slice().sort(compareBrowseListings);
+        const byId = new Map<string, Listing>();
+        for (const l of [
+          ...((boosted.data as Listing[]) || []),
+          ...((recent.data as Listing[]) || []),
+        ]) {
+          byId.set(l.id, l);
+        }
+        listings = Array.from(byId.values()).sort(compareBrowseListings);
       }
     } catch (e) {
       fetchError = e instanceof Error ? e.message : "Failed to load listings";

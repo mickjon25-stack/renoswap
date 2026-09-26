@@ -45,6 +45,10 @@ export async function POST(req: Request) {
     let customerId = profile?.stripe_customer_id as string | null | undefined;
 
     if (!customerId) {
+      // Build the service client first so a misconfigured key fails before we
+      // create an orphaned Stripe customer.
+      const { createServiceClient } = await import("@/lib/supabase/admin");
+      const admin = createServiceClient();
       const customer = await stripe.customers.create({
         email: user.email || profile?.email || undefined,
         name: profile?.display_name || undefined,
@@ -52,12 +56,16 @@ export async function POST(req: Request) {
       });
       customerId = customer.id;
       // Persist customer id via service role so the billing trigger allows it.
-      const { createServiceClient } = await import("@/lib/supabase/admin");
-      const admin = createServiceClient();
-      await admin
+      const { data: saved, error: saveErr } = await admin
         .from("profiles")
         .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select("id");
+      if (saveErr || !saved?.length) {
+        throw new Error(
+          `Could not save Stripe customer on profile: ${saveErr?.message || "0 rows updated"}`
+        );
+      }
     }
 
     if (body.kind === "subscription") {
