@@ -17,7 +17,14 @@ export function Nav({
   return (
     <header className="topbar">
       <Link href="/browse" className="brand">
-        <div className="logo">RS</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="logo-img"
+          src="/logo-64.png"
+          alt="RenoSwap logo"
+          width={32}
+          height={32}
+        />
         <div>
           <h1>RenoSwap</h1>
           <span>Texas leftovers · swap first</span>

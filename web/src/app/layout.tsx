@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ConfigBanner } from "@/components/ConfigBanner";
@@ -12,6 +12,18 @@ export const metadata: Metadata = {
   title: "RenoSwap — Texas leftover materials",
   description:
     "Texas-first marketplace for renovation leftovers. Swap first; sell when it helps.",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1faab6",
 };
 
 async function getProfile(): Promise<Profile | null> {
