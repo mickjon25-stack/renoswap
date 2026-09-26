@@ -55,7 +55,7 @@ export function bumpPriceId(): string {
   const id = process.env.STRIPE_PRICE_BUMP;
   if (!id) {
     throw new Error(
-      "Missing env STRIPE_PRICE_BUMP. Create a $5 one-time Price in Stripe Dashboard."
+      "Missing env STRIPE_PRICE_BUMP. Create a $1.99 one-time Price (listing boost) in Stripe Dashboard."
     );
   }
   return id;

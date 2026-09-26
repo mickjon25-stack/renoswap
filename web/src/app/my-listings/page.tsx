@@ -111,7 +111,7 @@ export default async function MyListingsPage() {
                     <td>
                       {l.city}, {l.zip}
                       {isRecentlyBumped(l.bumped_at) ? (
-                        <div className="help">Bumped (7-day boost)</div>
+                        <div className="help">Boosted (7 days)</div>
                       ) : null}
                     </td>
                     <td>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BUMP_PRICE_USD, isRecentlyBumped } from "@/lib/billing";
+import { BUMP_PRICE_LABEL, isRecentlyBumped } from "@/lib/billing";
 
 export function BumpButton({
   listingId,
@@ -25,11 +25,11 @@ export function BumpButton({
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {
-        throw new Error(data.error || "Could not start bump checkout");
+        throw new Error(data.error || "Could not start boost checkout");
       }
       window.location.href = data.url;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Bump failed");
+      setError(e instanceof Error ? e.message : "Boost failed");
       setLoading(false);
     }
   }
@@ -43,15 +43,15 @@ export function BumpButton({
         disabled={loading}
         title={
           active
-            ? "Already boosted — you can bump again to refresh the 7-day window"
-            : `Boost this listing to the top of Browse for 7 days ($${BUMP_PRICE_USD})`
+            ? "Already boosted — you can boost again to refresh the 7-day window"
+            : `Boost this listing to the top of Browse for 7 days (${BUMP_PRICE_LABEL})`
         }
       >
         {loading
           ? "Redirecting…"
           : active
-            ? `Refresh bump ($${BUMP_PRICE_USD})`
-            : `Bump listing ($${BUMP_PRICE_USD})`}
+            ? `Refresh boost (${BUMP_PRICE_LABEL})`
+            : `Boost listing (${BUMP_PRICE_LABEL})`}
       </button>
       {error ? <div className="err" style={{ marginTop: 8 }}>{error}</div> : null}
     </div>

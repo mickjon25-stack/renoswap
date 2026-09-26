@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { hasStripeConfig } from "@/lib/stripe";
 import {
-  BUMP_PRICE_USD,
+  BUMP_PRICE_LABEL,
   FREE_LISTING_CAP,
   PLAN_PRICES,
   isPlanActive,
@@ -76,7 +76,7 @@ export default async function BillingPage({
       </div>
       <p className="help" style={{ marginBottom: 16 }}>
         RenoSwap never takes a cut of materials sales — you only pay for listing
-        capacity and optional bumps. Arrange payment off-platform.
+        capacity and optional listing boosts. Arrange payment off-platform.
       </p>
 
       {sp.checkout === "success" ? (
@@ -172,10 +172,10 @@ export default async function BillingPage({
       </div>
 
       <div className="panel">
-        <h3 style={{ marginTop: 0 }}>Listing bump</h3>
+        <h3 style={{ marginTop: 0 }}>Listing boost</h3>
         <p>
-          One-time <strong>${BUMP_PRICE_USD}</strong> per listing — boosts sort on
-          Browse for 7 days. Use the bump button on{" "}
+          One-time <strong>{BUMP_PRICE_LABEL}</strong> per listing — boosts sort on
+          Browse for 7 days. Use the boost button on{" "}
           <Link href="/my-listings">My listings</Link> or a listing you own.
         </p>
       </div>

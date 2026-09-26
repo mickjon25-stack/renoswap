@@ -83,7 +83,7 @@ Replace `you@example.com` with the email you used to sign up.
 | `/my-listings` | Poster’s listings + status |
 | `/admin` | Approve/reject + reports (`is_admin`) |
 | `/account` | Profile + avatar (`avatars` / `${userId}/…`) |
-| `/billing` | Plans, Stripe Checkout, Customer Portal, bump info |
+| `/billing` | Plans, Stripe Checkout, Customer Portal, listing boost info |
 
 ## Live marketplace (Supabase-backed)
 
@@ -110,7 +110,7 @@ Pricing (locked):
 | Free | $0 | 3 active listings (Pending Review + Approved + Claimed) |
 | Homeowner | $4.99/mo | Cap raised to **10** active listings |
 | Contractor | $19/mo | Cap **25** + `is_contractor` / Contractor role when subscribed |
-| Bump | $5 one-time | Sets `listings.bumped_at`; Browse sorts recent bumps (7 days) first |
+| Listing boost | $1.99 one-time | Sets `listings.bumped_at`; Browse sorts recent boosts (7 days) first |
 
 No materials payment / marketplace take-rate — Venmo/Zelle/cash stay off-platform.
 
@@ -128,7 +128,7 @@ See `.env.example`. Required for live billing:
 1. Open [Stripe Dashboard](https://dashboard.stripe.com/test/products) → **Products** → **Add product**.
 2. **Homeowner** — recurring monthly **$4.99** → copy Price id → `STRIPE_PRICE_HOMEOWNER`.
 3. **Contractor** — recurring monthly **$19.00** → `STRIPE_PRICE_CONTRACTOR`.
-4. **Listing bump** — one-time **$5.00** → `STRIPE_PRICE_BUMP`.
+4. **Listing boost** — one-time **$1.99** → `STRIPE_PRICE_BUMP`.
 5. Developers → **Webhooks** → Add endpoint `https://YOUR_DOMAIN/api/stripe/webhook` (local: `stripe listen --forward-to localhost:3000/api/stripe/webhook`).
 6. Subscribe to events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
 7. Copy signing secret → `STRIPE_WEBHOOK_SECRET`.
@@ -139,7 +139,7 @@ See `.env.example`. Required for live billing:
 | Path | Purpose |
 |------|---------|
 | `/billing` | Plan cards, Subscribe (Checkout), Manage (Customer Portal) |
-| `/api/stripe/checkout` | Creates Checkout Session (subscription or bump payment) |
+| `/api/stripe/checkout` | Creates Checkout Session (subscription or listing boost payment) |
 | `/api/stripe/portal` | Stripe Customer Portal session |
 | `/api/stripe/webhook` | Applies plan / `bumped_at` via service role |
 

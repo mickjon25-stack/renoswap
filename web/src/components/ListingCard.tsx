@@ -28,7 +28,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
           <span className="badge status-pending">Pending</span>
         ) : null}
         {isRecentlyBumped(listing.bumped_at) ? (
-          <span className="badge claimed">Bumped</span>
+          <span className="badge claimed">Boosted</span>
         ) : null}
       </div>
       <div className="card-body">

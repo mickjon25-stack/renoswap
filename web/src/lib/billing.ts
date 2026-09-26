@@ -9,8 +9,10 @@ export const HOMEOWNER_LISTING_CAP = 10;
 /** Contractor $19/mo: higher listing cap + contractor badge. */
 export const CONTRACTOR_LISTING_CAP = 25;
 
-export const BUMP_PRICE_USD = 5;
-/** Bumped listings sort first on Browse while within this window. */
+export const BUMP_PRICE_USD = 1.99;
+/** Display label for the one-time listing boost, e.g. "$1.99". */
+export const BUMP_PRICE_LABEL = `$${BUMP_PRICE_USD.toFixed(2)}`;
+/** Boosted (bumped) listings sort first on Browse while within this window. */
 export const BUMP_WINDOW_DAYS = 7;
 
 export const PLAN_PRICES: Record<
