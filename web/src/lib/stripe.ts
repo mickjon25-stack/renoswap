@@ -27,14 +27,30 @@ export function hasStripeConfig(): boolean {
   return key.startsWith("sk_") && pub.startsWith("pk_");
 }
 
+/**
+ * Absolute base URL for Stripe success/cancel/return URLs.
+ * Order: NEXT_PUBLIC_APP_URL (set this for Production only, e.g.
+ * https://renoswap.com) → the incoming request's host (works for Vercel
+ * previews, www, and local dev) → VERCEL_URL → localhost (local dev only).
+ */
 export function appBaseUrl(req?: Request): string {
   const env = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
   if (env) return env.replace(/\/$/, "");
   if (req) {
-    const proto = req.headers.get("x-forwarded-proto") || "http";
-    const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
-    if (host) return `${proto}://${host}`;
+    const host = (
+      req.headers.get("x-forwarded-host") || req.headers.get("host") || ""
+    )
+      .split(",")[0]
+      .trim();
+    if (host) {
+      const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host);
+      const proto =
+        (req.headers.get("x-forwarded-proto") || "").split(",")[0].trim() ||
+        (isLocal ? "http" : "https");
+      return `${proto}://${host}`;
+    }
   }
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
 

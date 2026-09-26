@@ -6,7 +6,12 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const nextRaw = searchParams.get("next") ?? "/account";
-  const next = nextRaw.startsWith("/") ? nextRaw : "/account";
+  // Only allow same-origin relative paths ("//evil.com" or "/\\evil.com"
+  // would otherwise be an open redirect).
+  const next =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.startsWith("/\\")
+      ? nextRaw
+      : "/account";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/auth?error=missing_code`);

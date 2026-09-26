@@ -6,7 +6,7 @@ Mirrors the locked [Texas soft-launch MVP](../TEXAS-SOFT-LAUNCH-MVP.md) and the 
 
 ## Prerequisites
 
-- Node 20+
+- Node 24 (pinned via `engines.node: "24.x"` in `package.json` and `.nvmrc`)
 - A [Supabase](https://supabase.com) project (live: `renoswap-prod`)
 
 ## Local setup
@@ -130,7 +130,7 @@ See `.env.example`. Required for live billing:
 3. **Contractor** — recurring monthly **$19.00** → `STRIPE_PRICE_CONTRACTOR`.
 4. **Listing boost** — one-time **$1.99** → `STRIPE_PRICE_BUMP`.
 5. Developers → **Webhooks** → Add endpoint `https://YOUR_DOMAIN/api/stripe/webhook` (local: `stripe listen --forward-to localhost:3000/api/stripe/webhook`).
-6. Subscribe to events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+6. Subscribe to events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
 7. Copy signing secret → `STRIPE_WEBHOOK_SECRET`.
 8. Enable Customer Portal (Settings → Billing → Customer portal) so **Manage billing** works.
 
@@ -144,6 +144,20 @@ See `.env.example`. Required for live billing:
 | `/api/stripe/webhook` | Applies plan / `bumped_at` via service role |
 
 Migration: `supabase/migrations/20260922_002_billing_stripe.sql` (applied on renoswap-prod).
+
+## Deploy on Vercel
+
+The Next.js app lives in the `web/` subfolder, so the Vercel project **must** use:
+
+- **Root Directory:** `web` (Project Settings → Build and Deployment). Vercel then auto-detects Next.js; no `vercel.json` needed.
+- **Framework preset:** Next.js (default build `next build`, install `npm ci` via `package-lock.json`).
+- **Node.js:** 24.x (from `engines` in `web/package.json`; overrides the dashboard setting).
+- **Env vars:** see the list in the deploy notes (names only; never commit values). Set `NEXT_PUBLIC_APP_URL=https://renoswap.com` for the **Production** environment only, so Preview deployments fall back to their own host for Stripe redirects.
+- **Domains:** add `renoswap.com` (primary) and `www.renoswap.com` (redirect → apex) so auth cookies live on one host.
+- **Stripe webhook (live):** endpoint `https://renoswap.com/api/stripe/webhook` with its own signing secret in `STRIPE_WEBHOOK_SECRET`.
+- **Supabase Auth URL config:** Site URL `https://renoswap.com`; redirect URLs for apex, www, Vercel previews and `http://localhost:3000/auth/callback`.
+
+The static demo at the repo root is unaffected by the Vercel project (it only builds `web/`). GitHub Pages keeps serving `main` until DNS is moved to Vercel.
 
 ## Deferred
 
