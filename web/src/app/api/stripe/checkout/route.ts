@@ -72,6 +72,32 @@ export async function POST(req: Request) {
       if (body.plan !== "homeowner" && body.plan !== "contractor") {
         return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
       }
+      // Already subscribed? Switch the existing subscription's price instead
+      // of opening a second Checkout (which would bill both plans).
+      const existing = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 10,
+      });
+      const live = existing.data.find(
+        (s) => s.status === "active" || s.status === "trialing"
+      );
+      if (live) {
+        const item = live.items.data[0];
+        const targetPrice = priceIdForPlan(body.plan);
+        if (item?.price?.id !== targetPrice) {
+          await stripe.subscriptions.update(live.id, {
+            items: [{ id: item.id, price: targetPrice }],
+            proration_behavior: "create_prorations",
+            metadata: { supabase_user_id: user.id, plan: body.plan },
+          });
+        }
+        return NextResponse.json({
+          url: `${base}/billing?checkout=success&plan=${body.plan}`,
+          switched: true,
+        });
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customerId,
