@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -139,12 +140,7 @@ export default async function InboxPage() {
               return (
                 <li key={thread.id}>
                   <Link href={`/inbox/${thread.id}`} className="inbox-row">
-                    {other?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="avatar sm" src={other.avatar_url} alt="" />
-                    ) : (
-                      <div className="avatar sm" />
-                    )}
+                    <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} size="sm" />
                     <div className="inbox-row-body">
                       <div className="row" style={{ gap: 8 }}>
                         <strong>{title}</strong>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -128,12 +129,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
               {offer?.status ? ` · Offer ${offer.status}` : ""}
             </div>
           </div>
-          {other?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="avatar sm" src={other.avatar_url} alt="" />
-          ) : (
-            <div className="avatar sm" />
-          )}
+          <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} />
         </div>
       </div>
 
@@ -154,6 +150,9 @@ export default async function ThreadPage({ params }: { params: Params }) {
                   className={`message-bubble ${mine ? "mine" : "theirs"}`}
                 >
                   <div className="message-meta">
+                    {mine ? null : (
+                      <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} size="xs" />
+                    )}
                     {mine ? "You" : other?.display_name || "Them"} ·{" "}
                     {formatWhen(m.created_at)}
                   </div>

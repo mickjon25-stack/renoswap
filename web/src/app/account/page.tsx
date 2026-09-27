@@ -11,6 +11,7 @@ import {
 } from "@/lib/supabase/env";
 import { texasZipError } from "@/lib/texas-zip";
 import type { Profile } from "@/lib/types";
+import { AvatarEditor } from "@/components/AvatarEditor";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -21,7 +22,6 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     display_name: "",
@@ -136,25 +136,6 @@ export default function AccountPage() {
     setSaving(true);
     try {
       const supabase = createClient();
-      let avatar_url = profile?.avatar_url ?? null;
-
-      if (avatarFile) {
-        const ext = (avatarFile.name.split(".").pop() || "jpg")
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "");
-        const path = `${userId}/avatar.${ext || "jpg"}`;
-        const { error: upErr } = await supabase.storage
-          .from("avatars")
-          .upload(path, avatarFile, {
-            upsert: true,
-            contentType: avatarFile.type || "image/jpeg",
-          });
-        if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-        // Bust CDN cache after overwrite.
-        avatar_url = `${pub.publicUrl}?t=${Date.now()}`;
-      }
-
       // Never demote an admin via the account form.
       const role =
         profile?.is_admin || form.role === "Admin"
@@ -179,7 +160,6 @@ export default function AccountPage() {
             company: form.is_contractor ? form.company.trim() : "",
             role,
             is_contractor: form.is_contractor,
-            avatar_url,
             profile_complete,
           },
           { onConflict: "id" }
@@ -193,7 +173,6 @@ export default function AccountPage() {
           ? "Profile saved."
           : "Saved. Add city and Texas ZIP to mark your profile complete."
       );
-      setAvatarFile(null);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
@@ -228,17 +207,16 @@ export default function AccountPage() {
         {error ? <div className="err">{error}</div> : null}
         {ok ? <div className="ok">{ok}</div> : null}
 
-        {profile?.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="avatar"
-            src={profile.avatar_url}
-            alt=""
-            style={{ marginBottom: 12 }}
+        {userId ? (
+          <AvatarEditor
+            userId={userId}
+            name={form.display_name || profile?.display_name || userEmail || ""}
+            url={profile?.avatar_url ?? null}
+            onChange={(url) =>
+              setProfile((p) => (p ? { ...p, avatar_url: url } : p))
+            }
           />
-        ) : (
-          <div className="avatar" style={{ marginBottom: 12 }} />
-        )}
+        ) : null}
 
         <form onSubmit={onSave}>
           <div className="field">
@@ -301,19 +279,6 @@ export default function AccountPage() {
               />
             </div>
           ) : null}
-          <div className="field">
-            <label htmlFor="avatar">Avatar photo</label>
-            <input
-              id="avatar"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-            />
-            <p className="help">
-              Uploaded to bucket <code>avatars</code> at{" "}
-              <code>{"${userId}/avatar.*"}</code>.
-            </p>
-          </div>
           <div className="actions">
             <button className="primary" type="submit" disabled={saving}>
               {saving ? "Saving…" : "Save profile"}

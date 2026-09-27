@@ -7,6 +7,7 @@ import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
 import { ReportForm } from "./ReportForm";
 import { BumpButton } from "@/components/BumpButton";
+import { Avatar } from "@/components/Avatar";
 import { isRecentlyBumped } from "@/lib/billing";
 
 export const dynamic = "force-dynamic";
@@ -119,12 +120,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <div className="panel">
             <h3 style={{ marginTop: 0 }}>Poster</h3>
             <div className="row" style={{ justifyContent: "flex-start", gap: 12 }}>
-              {poster?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="avatar" src={poster.avatar_url} alt="" />
-              ) : (
-                <div className="avatar" />
-              )}
+              <Avatar url={poster?.avatar_url} name={poster?.display_name || "Member"} />
               <div>
                 <strong>{poster?.display_name || "Member"}</strong>
                 <div className="meta">

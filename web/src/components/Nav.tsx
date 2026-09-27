@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Profile } from "@/lib/types";
+import { Avatar } from "@/components/Avatar";
 
 export function Nav({
   profile,
@@ -37,7 +38,18 @@ export function Nav({
         {profile ? link("/inbox", "Inbox") : null}
         {profile ? link("/billing", "Billing") : null}
         {profile?.is_admin ? link("/admin", "Admin") : null}
-        {profile ? link("/account", "Account") : link("/auth", "Sign in")}
+        {profile ? (
+          <Link
+            href="/account"
+            className={`nav-account${pathname === "/account" ? " active" : ""}`}
+            aria-label="Account"
+          >
+            <Avatar url={profile.avatar_url} name={profile.display_name} size="sm" />
+            <span>Account</span>
+          </Link>
+        ) : (
+          link("/auth", "Sign in")
+        )}
       </nav>
     </header>
   );

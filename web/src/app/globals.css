@@ -205,3 +205,22 @@ label { display: block; font-family: var(--font-ui); font-size: 12px; font-weigh
   background: none; border: 0; padding: 4px; color: var(--accent-dark);
   text-decoration: underline; font-weight: 600; box-shadow: none;
 }
+
+/* Profile pictures */
+.avatar { display: inline-block; flex: 0 0 auto; }
+.avatar.lg { width: 96px; height: 96px; }
+.avatar.xs { width: 24px; height: 24px; }
+.avatar-initials {
+  display: inline-grid; place-items: center; color: #5b5144; font-family: var(--font-ui);
+  font-weight: 700; font-size: 22px; letter-spacing: .5px; user-select: none;
+}
+.avatar.lg.avatar-initials { font-size: 34px; }
+.avatar.sm.avatar-initials, .avatar.xs.avatar-initials { font-size: 11px; }
+.avatar-editor { display: flex; gap: 16px; align-items: center; margin: 8px 0 18px; flex-wrap: wrap; }
+.avatar-editor-body { flex: 1 1 200px; min-width: 0; }
+.file-btn { position: relative; overflow: hidden; cursor: pointer; display: inline-flex; align-items: center; }
+.file-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.file-btn.disabled { opacity: .45; pointer-events: none; }
+.avatar-status { font-size: 13px; }
+.nav-account { display: inline-flex; align-items: center; gap: 6px; }
+.message-meta .avatar { vertical-align: middle; margin-right: 6px; }
