@@ -127,8 +127,18 @@ async function handleCheckoutCompleted(
 async function handleSubscriptionChange(
   admin: ReturnType<typeof createServiceClient>,
   stripe: ReturnType<typeof getStripe>,
-  sub: Stripe.Subscription
+  eventSub: Stripe.Subscription
 ) {
+  // Stripe does not guarantee delivery order (e.g. subscription.created with
+  // status "incomplete" can land after .updated "active"), so act on the
+  // subscription's current state rather than the event's snapshot.
+  let sub = eventSub;
+  try {
+    sub = await stripe.subscriptions.retrieve(eventSub.id);
+  } catch {
+    // Fall back to the event payload if the subscription can't be fetched.
+  }
+
   const userId =
     sub.metadata?.supabase_user_id ||
     (await findUserIdByCustomer(
