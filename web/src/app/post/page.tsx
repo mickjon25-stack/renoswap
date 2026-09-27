@@ -1,5 +1,6 @@
 "use client";
 
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -105,11 +106,7 @@ export default function PostPage() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("plan, plan_status")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: profile } = await getMyProfile(supabase);
 
       const { count: activeCount, error: countErr } = await supabase
         .from("listings")

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -28,11 +29,7 @@ export default async function AdminPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data: profile } = await getMyProfile(supabase);
 
   if (!profile?.is_admin) {
     return (

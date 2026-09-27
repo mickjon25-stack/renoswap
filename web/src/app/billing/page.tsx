@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -45,11 +46,7 @@ export default async function BillingPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data: profile } = await getMyProfile(supabase);
 
   const p = profile as Profile | null;
   const plan = p?.plan || "free";

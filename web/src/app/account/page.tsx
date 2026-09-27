@@ -1,5 +1,6 @@
 "use client";
 
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -51,11 +52,7 @@ export default function AccountPage() {
         setUserEmail(user.email ?? null);
 
         const supabase = createClient();
-        const { data: existing, error: err } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
+        const { data: existing, error: err } = await getMyProfile(supabase);
         if (err) throw err;
 
         let data = existing;
@@ -63,20 +60,20 @@ export default function AccountPage() {
           const displayName =
             (user.user_metadata?.display_name as string | undefined) ||
             (user.email ? user.email.split("@")[0] : "user");
-          const { data: created, error: upErr } = await supabase
-            .from("profiles")
-            .upsert(
-              {
-                id: user.id,
-                email: user.email ?? null,
-                display_name: displayName,
-              },
-              { onConflict: "id" }
-            )
-            .select("*")
-            .single();
+          // Insert-if-missing (ON CONFLICT DO NOTHING); private columns
+          // aren't readable via the API, so re-read through getMyProfile().
+          const { error: upErr } = await supabase.from("profiles").upsert(
+            {
+              id: user.id,
+              email: user.email ?? null,
+              display_name: displayName,
+            },
+            { onConflict: "id", ignoreDuplicates: true }
+          );
           if (upErr) throw upErr;
-          data = created;
+          const { data: fresh, error: freshErr } = await getMyProfile(supabase);
+          if (freshErr) throw freshErr;
+          data = fresh;
         }
 
         if (!cancelled && data) {
@@ -149,10 +146,7 @@ export default function AccountPage() {
 
       const { data, error: err } = await supabase
         .from("profiles")
-        .upsert(
-          {
-            id: userId,
-            email: userEmail,
+        .update({
             display_name: form.display_name.trim(),
             city: form.city.trim(),
             zip: form.zip.trim(),
@@ -161,13 +155,14 @@ export default function AccountPage() {
             role,
             is_contractor: form.is_contractor,
             profile_complete,
-          },
-          { onConflict: "id" }
-        )
-        .select("*")
-        .single();
+          })
+        .eq("id", userId)
+        .select("id");
       if (err) throw err;
-      setProfile(data as Profile);
+      if (!data?.length) throw new Error("Save failed: profile not found.");
+      const { data: fresh, error: freshErr } = await getMyProfile(supabase);
+      if (freshErr) throw freshErr;
+      setProfile(fresh);
       setOk(
         profile_complete
           ? "Profile saved."

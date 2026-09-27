@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ConfigBanner } from "@/components/ConfigBanner";
@@ -35,12 +36,8 @@ async function getProfile(): Promise<Profile | null> {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-    return (data as Profile) || null;
+    const { data } = await getMyProfile(supabase);
+    return data;
   } catch {
     return null;
   }

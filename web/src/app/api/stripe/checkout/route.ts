@@ -1,3 +1,4 @@
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -36,11 +37,7 @@ export async function POST(req: Request) {
     const stripe = getStripe();
     const base = appBaseUrl(req);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, email, display_name, stripe_customer_id")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profile } = await getMyProfile(supabase);
 
     let customerId = profile?.stripe_customer_id as string | null | undefined;
 

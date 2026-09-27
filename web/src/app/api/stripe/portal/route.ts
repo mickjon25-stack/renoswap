@@ -1,3 +1,4 @@
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { appBaseUrl, getStripe, hasStripeConfig } from "@/lib/stripe";
@@ -21,11 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profile } = await getMyProfile(supabase);
 
     if (!profile?.stripe_customer_id) {
       return NextResponse.json(

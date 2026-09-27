@@ -1,3 +1,4 @@
+import { getMyProfile } from "@/lib/supabase/my-profile";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -29,11 +30,7 @@ export default async function MyListingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("plan, plan_status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data: profile } = await getMyProfile(supabase);
 
   const { data, error } = await supabase
     .from("listings")
