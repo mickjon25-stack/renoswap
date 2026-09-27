@@ -38,7 +38,10 @@ function AuthForm() {
 
   useEffect(() => {
     const q = searchParams.get("error");
-    if (q) {
+    // Magic-link tokens in the #fragment are being handled by AuthHashHandler.
+    const hashLogin =
+      typeof window !== "undefined" && window.location.hash.includes("access_token=");
+    if (q && !(q === "missing_code" && hashLogin)) {
       setError(
         q === "not_configured"
           ? MISSING_SUPABASE_ENV_MESSAGE

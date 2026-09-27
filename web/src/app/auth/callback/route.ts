@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 
@@ -13,8 +14,16 @@ export async function GET(request: Request) {
       ? nextRaw
       : "/account";
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/auth?error=missing_code`);
+  const tokenHash = searchParams.get("token_hash");
+  const otpType = searchParams.get("type") as EmailOtpType | null;
+
+  if (!code && !(tokenHash && otpType)) {
+    // Implicit-flow links carry tokens in the #fragment (invisible here); the
+    // browser keeps the fragment across this redirect and AuthHashHandler
+    // finishes sign-in, then continues to `next`.
+    return NextResponse.redirect(
+      `${origin}/auth?error=missing_code&next=${encodeURIComponent(next)}`
+    );
   }
 
   if (!hasSupabaseConfig()) {
@@ -22,7 +31,9 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = code
+    ? await supabase.auth.exchangeCodeForSession(code)
+    : await supabase.auth.verifyOtp({ type: otpType!, token_hash: tokenHash! });
   if (error) {
     return NextResponse.redirect(
       `${origin}/auth?error=${encodeURIComponent(error.message)}`

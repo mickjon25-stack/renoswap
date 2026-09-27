@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ConfigBanner } from "@/components/ConfigBanner";
+import { AuthHashHandler } from "@/components/AuthHashHandler";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import type { Profile } from "@/lib/types";
@@ -58,6 +59,7 @@ export default async function RootLayout({
         <div className="app-shell">
           <Nav profile={profile} />
           <ConfigBanner />
+          <AuthHashHandler />
           <main>{children}</main>
         </div>
       </body>
