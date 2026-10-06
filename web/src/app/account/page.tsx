@@ -10,7 +10,7 @@ import {
   hasSupabaseConfig,
   MISSING_SUPABASE_ENV_MESSAGE,
 } from "@/lib/supabase/env";
-import { texasZipError } from "@/lib/texas-zip";
+import { usZipError } from "@/lib/us-zip";
 import type { Profile } from "@/lib/types";
 import { AvatarEditor } from "@/components/AvatarEditor";
 
@@ -116,7 +116,7 @@ export default function AccountPage() {
       return;
     }
 
-    const zipErr = form.zip ? texasZipError(form.zip) : null;
+    const zipErr = form.zip ? usZipError(form.zip) : null;
     if (zipErr) {
       setError(zipErr);
       return;
@@ -162,7 +162,7 @@ export default function AccountPage() {
       setOk(
         profile_complete
           ? "Profile saved."
-          : "Saved. Add city and Texas ZIP to mark your profile complete."
+          : "Saved. Add city and ZIP code to mark your profile complete."
       );
       router.refresh();
     } catch (e) {
@@ -192,7 +192,7 @@ export default function AccountPage() {
           </form>
         </div>
         <p className="help">
-          Photo, city, and Texas ZIP — editable anytime. Profile is complete when
+          Photo, city, and U.S. ZIP — editable anytime. Profile is complete when
           display name, city, and ZIP are set.
         </p>
         {error ? <div className="err">{error}</div> : null}
@@ -228,14 +228,15 @@ export default function AccountPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="zip">Texas ZIP</label>
+            <label htmlFor="zip">ZIP code</label>
             <input
               id="zip"
               inputMode="numeric"
-              maxLength={5}
+              maxLength={10}
               value={form.zip}
               onChange={(e) => setForm({ ...form, zip: e.target.value })}
               placeholder="78701"
+              autoComplete="postal-code"
             />
           </div>
           <div className="field">

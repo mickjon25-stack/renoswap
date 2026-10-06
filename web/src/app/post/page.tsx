@@ -11,7 +11,7 @@ import {
   MISSING_SUPABASE_ENV_MESSAGE,
 } from "@/lib/supabase/env";
 import { ACTIVE_STATUSES, CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
-import { texasZipError } from "@/lib/texas-zip";
+import { usZipError } from "@/lib/us-zip";
 import { FREE_LISTING_CAP, listingCapForPlan } from "@/lib/billing";
 import ListingPhotoPicker, { MAX_LISTING_PHOTOS } from "@/components/ListingPhotoPicker";
 
@@ -81,7 +81,7 @@ export default function PostPage() {
       return;
     }
 
-    const zipErr = texasZipError(form.zip);
+    const zipErr = usZipError(form.zip);
     if (zipErr) {
       setError(zipErr);
       return;
@@ -348,16 +348,17 @@ export default function PostPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="zip">Texas ZIP</label>
+            <label htmlFor="zip">ZIP code</label>
             <input
               id="zip"
               required
               inputMode="numeric"
-              pattern="\d{5}"
-              maxLength={5}
+              pattern="\d{5}(-\d{4})?"
+              maxLength={10}
               value={form.zip}
               onChange={(e) => set("zip", e.target.value)}
               placeholder="78701"
+              autoComplete="postal-code"
             />
           </div>
           </div>
