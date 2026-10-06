@@ -24,9 +24,9 @@ const ui = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "RenoSwap — Texas leftover materials",
+  title: "RenoSwap — leftover reno materials",
   description:
-    "Texas-first marketplace for renovation leftovers. Swap first; sell when it helps.",
+    "Marketplace for renovation leftovers. Swap first; sell when it helps. Soft launch open across the U.S.",
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
@@ -76,7 +76,7 @@ export default async function RootLayout({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo-64.png" alt="" width={24} height={24} />
               <span>
-                <strong>RenoSwap</strong> · Texas leftovers · swap first
+                <strong>RenoSwap</strong> · Leftover reno · swap first
               </span>
             </div>
           </footer>

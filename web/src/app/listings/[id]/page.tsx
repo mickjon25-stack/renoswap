@@ -137,7 +137,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                 <div className="meta">
                   {poster?.is_contractor && poster.company
                     ? `Contractor · ${poster.company}`
-                    : poster?.city || "Texas"}
+                    : poster?.city || "Local"}
                 </div>
               </div>
             </div>

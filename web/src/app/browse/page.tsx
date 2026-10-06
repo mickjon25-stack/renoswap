@@ -84,8 +84,8 @@ export default async function BrowsePage({
         <div className="hero-copy">
           <h2>Leftover reno materials, still useful.</h2>
           <p>
-            Swap or sell leftovers across Texas. Soft-launch focus: greater Austin
-            + San Antonio — any Texas ZIP welcome.
+            Swap or sell leftover reno materials across the U.S. Soft launch —
+            open to early testers anywhere.
           </p>
           <div className="hero-actions">
             <Link href="/post" className="primary btn-lg">

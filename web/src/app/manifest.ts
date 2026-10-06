@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "RenoSwap",
     short_name: "RenoSwap",
     description:
-      "Texas-first marketplace for renovation leftovers. Swap first; sell when it helps.",
+      "Marketplace for renovation leftovers. Swap first; sell when it helps. Soft launch open across the U.S.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

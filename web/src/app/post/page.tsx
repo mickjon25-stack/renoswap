@@ -224,7 +224,7 @@ export default function PostPage() {
         <h2 style={{ marginTop: 0 }}>Post leftovers</h2>
         <p className="help">
           Listings start as <strong>Pending Review</strong>. Admins approve before
-          they appear on Browse. Texas ZIP required.
+          they appear on Browse.
         </p>
         {!hasSupabaseConfig() ? (
           <div className="err">{MISSING_SUPABASE_ENV_MESSAGE}</div>

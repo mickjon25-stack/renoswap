@@ -79,13 +79,13 @@ export function Nav({ profile }: { profile: Profile | null }) {
           <img
             className="logo-img"
             src="/logo-64.png"
-            alt="RenoSwap logo"
+            alt="RenoSwap — leftover reno · swap first"
             width={36}
             height={36}
           />
           <div className="brand-text">
             <h1>RenoSwap</h1>
-            <span>Texas leftovers · swap first</span>
+            <span>Leftover reno · swap first</span>
           </div>
         </Link>
 

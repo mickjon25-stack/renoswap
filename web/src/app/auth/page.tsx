@@ -301,8 +301,8 @@ function AuthForm() {
         {mode === "reset"
           ? "Enter your email and we'll send a link to set a new password."
           : mode === "signup"
-            ? "Texas-only marketplace. We'll email you a link to confirm your address."
-            : "Texas-only marketplace. Sign in with your email and password."}
+            ? "Leftover reno marketplace — soft launch across the U.S. We'll email you a link to confirm your address."
+            : "Leftover reno marketplace — soft launch across the U.S. Sign in with your email and password."}
       </p>
       {!configured ? <div className="err">{MISSING_SUPABASE_ENV_MESSAGE}</div> : null}
       {error ? (
