@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { CATEGORIES, INTENTS } from "@/lib/constants";
 import type { Listing } from "@/lib/types";
+import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import { BUMP_WINDOW_DAYS, compareBrowseListings } from "@/lib/billing";
 import Link from "next/link";
 
@@ -67,7 +68,10 @@ export default async function BrowsePage({
         ]) {
           byId.set(l.id, l);
         }
-        listings = Array.from(byId.values()).sort(compareBrowseListings);
+        listings = await withSignedPhotoUrls(
+          supabase,
+          Array.from(byId.values()).sort(compareBrowseListings)
+        );
       }
     } catch (e) {
       fetchError = e instanceof Error ? e.message : "Failed to load listings";

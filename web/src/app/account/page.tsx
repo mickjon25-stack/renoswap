@@ -133,13 +133,9 @@ export default function AccountPage() {
     setSaving(true);
     try {
       const supabase = createClient();
-      // Never demote an admin via the account form.
-      const role =
-        profile?.is_admin || form.role === "Admin"
-          ? "Admin"
-          : form.is_contractor
-            ? "Contractor"
-            : "Homeowner";
+      // Admin access comes from is_admin (server-only), never from the public
+      // role label, so the client only ever writes Homeowner/Contractor.
+      const role = form.is_contractor ? "Contractor" : "Homeowner";
       const profile_complete = Boolean(
         form.display_name.trim() && form.city.trim() && form.zip.trim()
       );

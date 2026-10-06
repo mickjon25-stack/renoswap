@@ -182,13 +182,11 @@ export default function PostPage() {
             contentType: file.type || "image/jpeg",
           });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage
-          .from("listing-photos")
-          .getPublicUrl(path);
         const { error: photoErr } = await supabase.from("listing_photos").insert({
           listing_id: listing.id,
           storage_path: path,
-          public_url: pub.publicUrl,
+          // Bucket is private; pages sign storage_path on render.
+          public_url: null,
           sort_order: i,
         });
         if (photoErr) throw photoErr;

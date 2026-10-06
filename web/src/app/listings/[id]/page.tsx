@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { sortedPhotos, statusChipClass } from "@/lib/listing-ui";
+import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
 import { ReportForm } from "./ReportForm";
@@ -43,7 +44,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
     .maybeSingle();
 
   if (error || !data) notFound();
-  const listing = data as Listing;
+  const [listing] = await withSignedPhotoUrls(supabase, [data as Listing]);
   const photos = sortedPhotos(listing.listing_photos);
   const poster = listing.profiles;
 

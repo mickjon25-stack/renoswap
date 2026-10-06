@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import { primaryPhotoUrl, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
 import { BumpButton } from "@/components/BumpButton";
@@ -38,7 +39,7 @@ export default async function MyListingsPage() {
     .eq("poster_id", user.id)
     .order("created_at", { ascending: false });
 
-  const listings = (data as Listing[]) || [];
+  const listings = await withSignedPhotoUrls(supabase, (data as Listing[]) || []);
   const activeCount = listings.filter((l) =>
     (ACTIVE_STATUSES as readonly string[]).includes(l.status)
   ).length;

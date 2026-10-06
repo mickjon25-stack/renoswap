@@ -3,6 +3,7 @@ import { getMyProfile } from "@/lib/supabase/my-profile";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import { primaryPhotoUrl } from "@/lib/listing-ui";
 import type { Listing, Report } from "@/lib/types";
 import { AdminActions } from "./AdminActions";
@@ -56,7 +57,7 @@ export default async function AdminPage() {
     .eq("status", "Pending")
     .order("created_at", { ascending: true });
 
-  const listings = (pending as PendingListing[]) || [];
+  const listings = await withSignedPhotoUrls(supabase, (pending as PendingListing[]) || []);
   const pendingReports = (reports as Report[]) || [];
 
   return (
