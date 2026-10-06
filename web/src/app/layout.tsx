@@ -1,0 +1,87 @@
+import type { Metadata, Viewport } from "next";
+import { Fraunces, Inter } from "next/font/google";
+import { getMyProfile } from "@/lib/supabase/my-profile";
+import "./globals.css";
+import { Nav } from "@/components/Nav";
+import { ConfigBanner } from "@/components/ConfigBanner";
+import { AuthHashHandler } from "@/components/AuthHashHandler";
+import { createClient } from "@/lib/supabase/server";
+import { hasSupabaseConfig } from "@/lib/supabase/env";
+import type { Profile } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-display-face",
+  display: "swap",
+});
+const ui = Inter({
+  subsets: ["latin"],
+  variable: "--font-ui-face",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "RenoSwap — leftover reno materials",
+  description:
+    "Marketplace for renovation leftovers. Swap first; sell when it helps. Soft launch open across the U.S.",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1faab6",
+};
+
+async function getProfile(): Promise<Profile | null> {
+  if (!hasSupabaseConfig()) return null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await getMyProfile(supabase);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const profile = await getProfile();
+
+  return (
+    <html lang="en" className={`${display.variable} ${ui.variable}`}>
+      <body>
+        <div className="app-shell">
+          <Nav profile={profile} />
+          <ConfigBanner />
+          <AuthHashHandler />
+          <main className="app-main">{children}</main>
+          <footer className="site-footer">
+            <div className="site-footer-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-64.png" alt="" width={24} height={24} />
+              <span>
+                <strong>RenoSwap</strong> · Leftover reno · swap first
+              </span>
+            </div>
+          </footer>
+        </div>
+      </body>
+    </html>
+  );
+}
