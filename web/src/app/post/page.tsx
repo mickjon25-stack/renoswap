@@ -13,13 +13,14 @@ import {
 import { ACTIVE_STATUSES, CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
 import { texasZipError } from "@/lib/texas-zip";
 import { FREE_LISTING_CAP, listingCapForPlan } from "@/lib/billing";
+import ListingPhotoPicker, { MAX_LISTING_PHOTOS } from "@/components/ListingPhotoPicker";
 
 export default function PostPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [files, setFiles] = useState<FileList | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [capBlocked, setCapBlocked] = useState(false);
   const [capInfo, setCapInfo] = useState<{ active: number; cap: number } | null>(
     null
@@ -89,8 +90,8 @@ export default function PostPage() {
       setError("Title and city are required.");
       return;
     }
-    if (!files || files.length < 1) {
-      setError("Add at least one photo (up to 6). Photos are required for listings.");
+    if (files.length < 1) {
+      setError("Take at least one photo of the item (up to 6). Photos are required for listings.");
       return;
     }
 
@@ -168,7 +169,7 @@ export default function PostPage() {
       }
       createdListingId = listing.id;
 
-      const max = Math.min(files.length, 6);
+      const max = Math.min(files.length, MAX_LISTING_PHOTOS);
       for (let i = 0; i < max; i++) {
         const file = files[i];
         const ext = (file.name.split(".").pop() || "jpg")
@@ -387,19 +388,8 @@ export default function PostPage() {
             </label>
           </div>
           <div className="field">
-            <label htmlFor="photos">Photos (required, up to 6)</label>
-            <input
-              id="photos"
-              type="file"
-              accept="image/*"
-              multiple
-              required
-              onChange={(e) => setFiles(e.target.files)}
-            />
-            <p className="help">
-              Stored in bucket <code>listing-photos</code> at{" "}
-              <code>{"${userId}/${listingId}/…"}</code>. Prefer 3+ clear photos.
-            </p>
+            <label htmlFor="photos">Photos (required, up to {MAX_LISTING_PHOTOS})</label>
+            <ListingPhotoPicker files={files} onChange={setFiles} disabled={loading} />
           </div>
           <div className="actions">
             <button className="primary" type="submit" disabled={loading}>
