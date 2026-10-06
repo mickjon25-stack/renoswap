@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test scripts/test-photo-freshness.mjs"
+    "test": "node --test scripts/test-photo-freshness.mjs scripts/test-strip-photo-location.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

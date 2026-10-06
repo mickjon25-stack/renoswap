@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { checkPhotoFreshness, STALE_PHOTO_MESSAGE } from "@/lib/photo-freshness";
+import { stripPhotoLocation } from "@/lib/strip-photo-location";
 
 export const MAX_LISTING_PHOTOS = 6;
 
@@ -16,7 +17,8 @@ type Props = {
  * - Phones: `capture="environment"` opens the rear camera directly; one photo per tap
  *   (no `multiple` there — Android Chrome ignores `capture` when `multiple` is set).
  * - Computers: `capture` is ignored, so the normal file chooser opens (multi-select ok).
- * Every picked file goes through the freshness check before it is accepted.
+ * Every picked file goes through the freshness check on the original, then GPS/location
+ * metadata is stripped, before it is accepted for upload.
  * Profile photos use AvatarEditor and are NOT affected by any of this.
  */
 export default function ListingPhotoPicker({ files, onChange, disabled }: Props) {
@@ -56,9 +58,14 @@ export default function ListingPhotoPicker({ files, onChange, disabled }: Props)
           notImage++;
           continue;
         }
+        // (1) Freshness on the original — needs EXIF DateTimeOriginal before any strip.
         const result = await checkPhotoFreshness(file);
-        if (result.ok) accepted.push(file);
-        else stale++;
+        if (!result.ok) {
+          stale++;
+          continue;
+        }
+        // (2) Strip GPS / location metadata; (3) keep cleaned file for upload.
+        accepted.push(await stripPhotoLocation(file));
       }
       const room = Math.max(0, remaining);
       const tooMany = accepted.length > room;
@@ -141,8 +148,9 @@ export default function ListingPhotoPicker({ files, onChange, disabled }: Props)
         ) : null}
       </div>
       <p className="help">
-        Take photos of the actual item now. Library photos aren&apos;t allowed.{" "}
-        {files.length}/{MAX_LISTING_PHOTOS} added · 3+ clear shots work best.
+        Take photos of the actual item now. Library photos aren&apos;t allowed. Location data
+        is removed from photos before upload. {files.length}/{MAX_LISTING_PHOTOS} added · 3+
+        clear shots work best.
       </p>
       {isDesktop ? (
         <div className="warn photo-desktop-note">
