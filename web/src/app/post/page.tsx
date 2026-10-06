@@ -221,7 +221,7 @@ export default function PostPage() {
 
   return (
     <div className="wrap">
-      <div className="panel" style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div className="panel form-panel" style={{ maxWidth: 640, margin: "0 auto" }}>
         <h2 style={{ marginTop: 0 }}>Post leftovers</h2>
         <p className="help">
           Listings start as <strong>Pending Review</strong>. Admins approve before
@@ -255,6 +255,7 @@ export default function PostPage() {
               placeholder='Leftover 3/4" sanded plywood, 7 sheets'
             />
           </div>
+          <div className="field-grid">
           <div className="field">
             <label htmlFor="category">Category</label>
             <select
@@ -290,6 +291,7 @@ export default function PostPage() {
                 <option key={c}>{c}</option>
               ))}
             </select>
+          </div>
           </div>
           <div className="field">
             <label htmlFor="description">Description</label>
@@ -336,6 +338,7 @@ export default function PostPage() {
               <p className="help">Timer starts when an admin approves.</p>
             </div>
           ) : null}
+          <div className="field-grid">
           <div className="field">
             <label htmlFor="city">City</label>
             <input
@@ -357,6 +360,7 @@ export default function PostPage() {
               onChange={(e) => set("zip", e.target.value)}
               placeholder="78701"
             />
+          </div>
           </div>
           <div className="field check-row">
             <label>

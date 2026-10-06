@@ -61,7 +61,7 @@ export default async function AdminPage() {
 
   return (
     <div className="wrap stack">
-      <h2 style={{ margin: 0 }}>Admin queue</h2>
+      <h2 className="page-title" style={{ margin: 0 }}>Admin queue</h2>
       <p className="help">
         Approve / reject listings. Fast & Free timer starts on approve.
       </p>
@@ -73,7 +73,7 @@ export default async function AdminPage() {
         {listings.length === 0 ? (
           <p className="muted">No pending listings.</p>
         ) : (
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th></th>
@@ -140,7 +140,7 @@ export default async function AdminPage() {
         {pendingReports.length === 0 ? (
           <p className="muted">No pending reports.</p>
         ) : (
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th>Reason</th>

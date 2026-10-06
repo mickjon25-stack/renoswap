@@ -1,4 +1,4 @@
-import { ListingCard } from "@/components/ListingCard";
+import { ListingCard, intentClass } from "@/components/ListingCard";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { CATEGORIES, INTENTS } from "@/lib/constants";
@@ -77,23 +77,46 @@ export default async function BrowsePage({
   return (
     <div className="wrap">
       <section className="hero">
-        <h2>Leftover reno materials, still useful.</h2>
-        <p>
-          Swap or sell leftovers across Texas. Soft-launch focus: greater Austin
-          + San Antonio — any Texas ZIP welcome.
-        </p>
-        <Link href="/post" className="primary">
-          Post leftovers
-        </Link>
+        <div className="hero-copy">
+          <h2>Leftover reno materials, still useful.</h2>
+          <p>
+            Swap or sell leftovers across Texas. Soft-launch focus: greater Austin
+            + San Antonio — any Texas ZIP welcome.
+          </p>
+          <div className="hero-actions">
+            <Link href="/post" className="primary btn-lg">
+              Post leftovers
+            </Link>
+            <ul className="hero-intents" aria-label="Ways to trade">
+              {INTENTS.map((i) => (
+                <li key={i} className={`intent-dot ${intentClass(i)}`}>
+                  {i}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="hero-art" src="/logo-512.png" alt="" width={168} height={168} />
       </section>
 
-      <form className="filters" method="get">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Search title, city, looking for…"
-        />
-        <select name="category" defaultValue={category}>
+      <form className="filters" method="get" role="search">
+        <div className="search-field">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M11 4a7 7 0 1 0 4.2 12.6l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4Zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"
+            />
+          </svg>
+          <input
+            name="q"
+            type="search"
+            defaultValue={q}
+            placeholder="Search title, city, looking for…"
+            aria-label="Search listings"
+          />
+        </div>
+        <select name="category" defaultValue={category} aria-label="Category">
           <option value="">All categories</option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -101,7 +124,7 @@ export default async function BrowsePage({
             </option>
           ))}
         </select>
-        <select name="intent" defaultValue={intent}>
+        <select name="intent" defaultValue={intent} aria-label="Intent">
           <option value="">All intents</option>
           {INTENTS.map((i) => (
             <option key={i} value={i}>
@@ -109,7 +132,7 @@ export default async function BrowsePage({
             </option>
           ))}
         </select>
-        <button className="primary" type="submit" style={{ gridColumn: "1 / -1", justifySelf: "start" }}>
+        <button className="primary filters-submit" type="submit">
           Filter
         </button>
       </form>
@@ -124,7 +147,16 @@ export default async function BrowsePage({
           repo root (<code>index.html</code>).
         </div>
       ) : listings.length === 0 ? (
-        <div className="panel empty">No approved listings yet. Be the first to post.</div>
+        <div className="panel empty">
+          <div className="empty-icon" aria-hidden="true">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-64.png" alt="" width={48} height={48} />
+          </div>
+          <p>No approved listings yet. Be the first to post.</p>
+          <Link href="/post" className="primary">
+            Post leftovers
+          </Link>
+        </div>
       ) : (
         <div className="grid">
           {listings.map((l) => (

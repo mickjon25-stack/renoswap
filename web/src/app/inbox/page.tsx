@@ -114,7 +114,7 @@ export default async function InboxPage() {
 
   return (
     <div className="wrap">
-      <div className="row" style={{ marginBottom: 16 }}>
+      <div className="row page-head" style={{ marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>Inbox</h2>
         <Link href="/browse" className="ghost">
           Browse listings

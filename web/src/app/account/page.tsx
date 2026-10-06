@@ -186,7 +186,7 @@ export default function AccountPage() {
 
   return (
     <div className="wrap">
-      <div className="panel" style={{ maxWidth: 560, margin: "0 auto" }}>
+      <div className="panel form-panel" style={{ maxWidth: 560, margin: "0 auto" }}>
         <div className="row">
           <h2 style={{ margin: 0 }}>Account</h2>
           <form action="/auth/signout" method="post">

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Inter } from "next/font/google";
 import { getMyProfile } from "@/lib/supabase/my-profile";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
@@ -9,6 +10,18 @@ import { hasSupabaseConfig } from "@/lib/supabase/env";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-display-face",
+  display: "swap",
+});
+const ui = Inter({
+  subsets: ["latin"],
+  variable: "--font-ui-face",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "RenoSwap — Texas leftover materials",
@@ -51,13 +64,22 @@ export default async function RootLayout({
   const profile = await getProfile();
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${display.variable} ${ui.variable}`}>
       <body>
         <div className="app-shell">
           <Nav profile={profile} />
           <ConfigBanner />
           <AuthHashHandler />
-          <main>{children}</main>
+          <main className="app-main">{children}</main>
+          <footer className="site-footer">
+            <div className="site-footer-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-64.png" alt="" width={24} height={24} />
+              <span>
+                <strong>RenoSwap</strong> · Texas leftovers · swap first
+              </span>
+            </div>
+          </footer>
         </div>
       </body>
     </html>

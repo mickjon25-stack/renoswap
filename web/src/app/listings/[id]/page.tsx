@@ -9,6 +9,7 @@ import { ReportForm } from "./ReportForm";
 import { BumpButton } from "@/components/BumpButton";
 import { Avatar } from "@/components/Avatar";
 import { isRecentlyBumped } from "@/lib/billing";
+import { intentClass } from "@/components/ListingCard";
 
 export const dynamic = "force-dynamic";
 
@@ -48,17 +49,17 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   return (
     <div className="wrap">
-      <Link href="/browse" className="help">
+      <Link href="/browse" className="back-link">
         ← Back to browse
       </Link>
       <div className="detail-grid" style={{ marginTop: 12 }}>
         <div className="stack">
-          <div className="photos">
+          <div className={`photos${photos.length > 1 ? "" : " photos-single"}`}>
             {photos[0]?.public_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photos[0].public_url} alt={listing.title} />
             ) : (
-              <div className="thumb" style={{ height: 220, borderRadius: 14 }} />
+              <div className="thumb thumb-empty photo-placeholder" />
             )}
             <div className="stack">
               {photos.slice(1, 3).map((p) =>
@@ -69,13 +70,24 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               )}
             </div>
           </div>
-          <div className="panel">
-            <div className="row">
-              <h2 style={{ margin: 0 }}>{listing.title}</h2>
+          <div className="panel listing-main">
+            <div className="listing-chips">
+              <span className={`pill ${intentClass(listing.intent)}`}>{listing.intent}</span>
               <span className={`status-chip ${statusChipClass(listing.status)}`}>
                 {listing.status}
               </span>
+              {isRecentlyBumped(listing.bumped_at) ? (
+                <span className="pill boosted">Boosted</span>
+              ) : null}
             </div>
+            <h2 className="listing-title">{listing.title}</h2>
+            <p className="listing-price">
+              {listing.intent === "Fast & Free"
+                ? "Free — claim before the window closes"
+                : listing.price > 0
+                  ? `$${Number(listing.price).toFixed(2)}`
+                  : "Open to swap"}
+            </p>
             <p className="meta">
               {listing.intent} · {listing.category} · {listing.condition}
             </p>
@@ -85,18 +97,11 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                 <strong>Looking for:</strong> {listing.looking_for}
               </p>
             ) : null}
-            <p className="meta">
+            <p className="meta listing-loc">
               {listing.city}, {listing.zip}
               {listing.pickup_ok ? " · Pickup OK" : ""}
               {listing.shipping_ok ? " · Shipping OK" : ""}
               {listing.dumpster_bound ? " · Dumpster-bound" : ""}
-            </p>
-            <p>
-              {listing.intent === "Fast & Free"
-                ? "Free — claim before the window closes"
-                : listing.price > 0
-                  ? `$${Number(listing.price).toFixed(2)}`
-                  : "Open to swap"}
             </p>
           </div>
         </div>
@@ -123,6 +128,11 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               <Avatar url={poster?.avatar_url} name={poster?.display_name || "Member"} />
               <div>
                 <strong>{poster?.display_name || "Member"}</strong>
+                {poster?.is_contractor ? (
+                  <span className="pill contractor" style={{ marginLeft: 8 }}>
+                    Contractor
+                  </span>
+                ) : null}
                 <div className="meta">
                   {poster?.is_contractor && poster.company
                     ? `Contractor · ${poster.company}`

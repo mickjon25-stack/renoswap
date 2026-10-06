@@ -46,7 +46,7 @@ export default async function MyListingsPage() {
 
   return (
     <div className="wrap">
-      <div className="row" style={{ marginBottom: 16 }}>
+      <div className="row page-head" style={{ marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>My listings</h2>
         <Link href="/post" className="primary">
           New post
@@ -59,10 +59,15 @@ export default async function MyListingsPage() {
       </p>
       {error ? <div className="err">{error.message}</div> : null}
       {listings.length === 0 ? (
-        <div className="panel empty">You haven&apos;t posted yet.</div>
+        <div className="panel empty">
+          <p>You haven&apos;t posted yet.</p>
+          <Link href="/post" className="primary">
+            New post
+          </Link>
+        </div>
       ) : (
         <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
-          <table className="table">
+          <table className="table table-cards">
             <thead>
               <tr>
                 <th></th>

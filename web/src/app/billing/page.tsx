@@ -65,7 +65,7 @@ export default async function BillingPage({
 
   return (
     <div className="wrap">
-      <div className="row" style={{ marginBottom: 8 }}>
+      <div className="row page-head" style={{ marginBottom: 8 }}>
         <h2 style={{ margin: 0 }}>Billing &amp; plans</h2>
         <Link href="/my-listings" className="ghost">
           My listings
@@ -98,7 +98,7 @@ export default async function BillingPage({
         </div>
       ) : null}
 
-      <div className="panel" style={{ marginBottom: 18 }}>
+      <div className="panel plan-current" style={{ marginBottom: 18 }}>
         <h3 style={{ marginTop: 0 }}>Your plan</h3>
         <p style={{ margin: "0 0 8px" }}>
           <strong style={{ textTransform: "capitalize" }}>{plan}</strong>
@@ -121,10 +121,10 @@ export default async function BillingPage({
         ) : null}
       </div>
 
-      <div className="grid" style={{ marginBottom: 18 }}>
-        <div className="panel">
+      <div className="grid plan-grid" style={{ marginBottom: 18 }}>
+        <div className={`panel plan-card${!paid ? " is-current" : ""}`}>
           <h3 style={{ marginTop: 0 }}>Free</h3>
-          <p className="meta" style={{ marginTop: 0 }}>
+          <p className="plan-price">
             $0
           </p>
           <p>Up to {FREE_LISTING_CAP} active listings (Pending Review, Approved, or Claimed).</p>
@@ -133,9 +133,9 @@ export default async function BillingPage({
           ) : null}
         </div>
 
-        <div className="panel">
+        <div className={`panel plan-card${paid && plan === "homeowner" ? " is-current" : ""}`}>
           <h3 style={{ marginTop: 0 }}>{PLAN_PRICES.homeowner.label}</h3>
-          <p className="meta" style={{ marginTop: 0 }}>
+          <p className="plan-price">
             {PLAN_PRICES.homeowner.priceLabel}
           </p>
           <p>{PLAN_PRICES.homeowner.blurb}</p>
@@ -150,9 +150,9 @@ export default async function BillingPage({
           )}
         </div>
 
-        <div className="panel">
+        <div className={`panel plan-card plan-featured${paid && plan === "contractor" ? " is-current" : ""}`}>
           <h3 style={{ marginTop: 0 }}>{PLAN_PRICES.contractor.label}</h3>
-          <p className="meta" style={{ marginTop: 0 }}>
+          <p className="plan-price">
             {PLAN_PRICES.contractor.priceLabel}
           </p>
           <p>{PLAN_PRICES.contractor.blurb}</p>

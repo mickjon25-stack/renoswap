@@ -109,7 +109,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
 
   return (
     <div className="wrap">
-      <Link href="/inbox" className="help">
+      <Link href="/inbox" className="back-link">
         ← Back to inbox
       </Link>
 
