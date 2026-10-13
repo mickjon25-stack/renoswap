@@ -722,3 +722,13 @@ input[type="file"]::file-selector-button {
 .photo-add:focus-within { box-shadow: var(--ring); }
 .photo-desktop-note { margin-top: var(--s-2); }
 .photo-picker .err { margin-top: var(--s-2); }
+
+/* Member ratings */
+.rating-badge { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+.rating-badge.is-new { font-weight: 500; opacity: 0.75; }
+.star-picker { display: flex; gap: 4px; }
+.star-picker button { font-size: 1.6rem; line-height: 1; background: none; border: none; padding: 2px 4px; cursor: pointer; color: #c9c9c9; box-shadow: none; }
+.star-picker button.on { color: #f5a623; }
+.review-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.review-item { border-top: 1px solid rgba(0,0,0,0.08); padding-top: 10px; }
+.review-item:first-child { border-top: none; padding-top: 0; }

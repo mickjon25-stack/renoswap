@@ -1,3 +1,4 @@
+import { fetchRatings, type Rating } from "@/lib/ratings";
 import { ListingCard, intentClass } from "@/components/ListingCard";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -27,6 +28,7 @@ export default async function BrowsePage({
 
   let listings: Listing[] = [];
   let fetchError: string | null = null;
+  let ratings: Record<string, Rating> = {};
 
   if (hasSupabaseConfig()) {
     try {
@@ -72,6 +74,7 @@ export default async function BrowsePage({
           supabase,
           Array.from(byId.values()).sort(compareBrowseListings)
         );
+        ratings = await fetchRatings(supabase, listings.map((l) => l.poster_id));
       }
     } catch (e) {
       fetchError = e instanceof Error ? e.message : "Failed to load listings";
@@ -164,7 +167,7 @@ export default async function BrowsePage({
       ) : (
         <div className="grid">
           {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} />
+            <ListingCard key={l.id} listing={l} rating={ratings[l.poster_id]} />
           ))}
         </div>
       )}

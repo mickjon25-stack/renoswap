@@ -11,6 +11,8 @@ import { BumpButton } from "@/components/BumpButton";
 import { Avatar } from "@/components/Avatar";
 import { isRecentlyBumped } from "@/lib/billing";
 import { intentClass } from "@/components/ListingCard";
+import { RatingBadge } from "@/components/RatingBadge";
+import { fetchRatings } from "@/lib/ratings";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   const [listing] = await withSignedPhotoUrls(supabase, [data as Listing]);
   const photos = sortedPhotos(listing.listing_photos);
   const poster = listing.profiles;
+  const ratings = await fetchRatings(supabase, [listing.poster_id]);
 
   return (
     <div className="wrap">
@@ -128,7 +131,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <div className="row" style={{ justifyContent: "flex-start", gap: 12 }}>
               <Avatar url={poster?.avatar_url} name={poster?.display_name || "Member"} />
               <div>
-                <strong>{poster?.display_name || "Member"}</strong>
+                <strong>
+                  <Link href={`/members/${listing.poster_id}`}>{poster?.display_name || "Member"}</Link>
+                </strong>
                 {poster?.is_contractor ? (
                   <span className="pill contractor" style={{ marginLeft: 8 }}>
                     Contractor
@@ -139,6 +144,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                     ? `Contractor · ${poster.company}`
                     : poster?.city || "Local"}
                 </div>
+                <RatingBadge rating={ratings[listing.poster_id]} />
               </div>
             </div>
           </div>

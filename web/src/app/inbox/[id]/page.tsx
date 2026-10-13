@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import type { Message, Profile } from "@/lib/types";
 import { ReplyForm } from "./ReplyForm";
+import { TradePanel, type TradeInfo } from "./TradePanel";
+import { RatingBadge } from "@/components/RatingBadge";
+import { fetchRatings } from "@/lib/ratings";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +88,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
       ? thread.participant_b
       : thread.participant_a;
 
-  const [{ data: otherProfile }, { data: messages, error: msgErr }] =
+  const [{ data: otherProfile }, { data: messages, error: msgErr }, { data: tradeRow }, ratings] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -97,7 +100,24 @@ export default async function ThreadPage({ params }: { params: Params }) {
         .select("id, thread_id, sender_id, body, created_at")
         .eq("thread_id", id)
         .order("created_at", { ascending: true }),
+      supabase
+        .from("trades")
+        .select("id, status, requested_by")
+        .eq("thread_id", id)
+        .maybeSingle(),
+      fetchRatings(supabase, [otherId]),
     ]);
+  const trade = (tradeRow as TradeInfo) || null;
+  let myReview: { stars: number; comment: string } | null = null;
+  if (trade?.status === "Confirmed") {
+    const { data: rv } = await supabase
+      .from("reviews")
+      .select("stars, comment")
+      .eq("trade_id", trade.id)
+      .eq("reviewer_id", user.id)
+      .maybeSingle();
+    myReview = (rv as { stars: number; comment: string } | null) || null;
+  }
 
   const other = otherProfile as Pick<
     Profile,
@@ -124,10 +144,12 @@ export default async function ThreadPage({ params }: { params: Params }) {
               )}
             </h2>
             <div className="meta">
-              with {other?.display_name || "Member"}
+              with{" "}
+              <Link href={`/members/${otherId}`}>{other?.display_name || "Member"}</Link>
               {other?.city ? ` · ${other.city}` : ""}
               {offer?.status ? ` · Offer ${offer.status}` : ""}
             </div>
+            <RatingBadge rating={ratings[otherId]} />
           </div>
           <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} />
         </div>
@@ -164,6 +186,17 @@ export default async function ThreadPage({ params }: { params: Params }) {
         )}
         <ReplyForm threadId={thread.id} />
       </div>
+
+      {listing ? (
+        <TradePanel
+          threadId={thread.id}
+          userId={user.id}
+          otherId={otherId}
+          otherName={other?.display_name || "the other member"}
+          trade={trade}
+          myReview={myReview}
+        />
+      ) : null}
 
       <div className="warn" style={{ marginTop: 12 }}>
         Stay safe — meet in public for pickups. RenoSwap never holds materials

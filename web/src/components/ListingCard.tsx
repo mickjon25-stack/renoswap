@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { primaryPhotoUrl } from "@/lib/listing-ui";
 import { isRecentlyBumped } from "@/lib/billing";
+import type { Rating } from "@/lib/ratings";
+import { RatingBadge } from "./RatingBadge";
 
 export function intentClass(intent: string) {
   if (intent === "Fast & Free") return "free";
@@ -10,7 +12,7 @@ export function intentClass(intent: string) {
   return "swap";
 }
 
-export function ListingCard({ listing }: { listing: Listing }) {
+export function ListingCard({ listing, rating }: { listing: Listing; rating?: Rating | null }) {
   const photo = primaryPhotoUrl(listing.listing_photos);
   const boosted = isRecentlyBumped(listing.bumped_at);
   const priceLabel =
@@ -60,6 +62,9 @@ export function ListingCard({ listing }: { listing: Listing }) {
             />
           </svg>
           {listing.city}, {listing.zip}
+        </div>
+        <div className="meta">
+          <RatingBadge rating={rating} />
         </div>
       </div>
     </Link>

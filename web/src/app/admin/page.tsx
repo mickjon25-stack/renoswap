@@ -8,6 +8,7 @@ import { primaryPhotoUrl } from "@/lib/listing-ui";
 import type { Listing, Report } from "@/lib/types";
 import { AdminActions } from "./AdminActions";
 import { ReportActions } from "./ReportActions";
+import { ReviewActions } from "./ReviewActions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,35 @@ export default async function AdminPage() {
     .select("*")
     .eq("status", "Pending")
     .order("created_at", { ascending: true });
+
+  const [{ data: reviewRows }, { data: reviewReportRows }] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("id, stars, comment, hidden, created_at, reviewer_id, reviewee_id")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("review_reports")
+      .select("id, review_id, reason")
+      .eq("status", "Pending"),
+  ]);
+  type AdminReview = { id: string; stars: number; comment: string; hidden: boolean; created_at: string; reviewer_id: string; reviewee_id: string };
+  const adminReviews = (reviewRows as AdminReview[]) || [];
+  const reviewReports = (reviewReportRows as { id: string; review_id: string; reason: string }[]) || [];
+  const reportsByReview = new Map<string, string[]>();
+  for (const rr of reviewReports) {
+    reportsByReview.set(rr.review_id, [...(reportsByReview.get(rr.review_id) || []), rr.reason || "(no reason)"]);
+  }
+  const reviewPeopleIds = Array.from(new Set(adminReviews.flatMap((r) => [r.reviewer_id, r.reviewee_id])));
+  const { data: reviewPeople } = reviewPeopleIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", reviewPeopleIds)
+    : { data: [] };
+  const personName = new Map(
+    ((reviewPeople as { id: string; display_name: string | null }[]) || []).map((p) => [p.id, p.display_name || "Member"])
+  );
+  const sortedReviews = [...adminReviews].sort(
+    (a, b) => Number(reportsByReview.has(b.id)) - Number(reportsByReview.has(a.id))
+  );
 
   const listings = await withSignedPhotoUrls(supabase, (pending as PendingListing[]) || []);
   const pendingReports = (reports as Report[]) || [];
@@ -169,6 +199,51 @@ export default async function AdminPage() {
                   </td>
                   <td>
                     <ReportActions reportId={r.id} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <div className="panel">
+        <h3 style={{ marginTop: 0 }}>
+          Reviews ({reviewReports.length} reported)
+        </h3>
+        {sortedReviews.length === 0 ? (
+          <p className="muted">No reviews yet.</p>
+        ) : (
+          <table className="table table-cards">
+            <thead>
+              <tr>
+                <th>Review</th>
+                <th>Who</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedReviews.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    <strong>{"⭐".repeat(r.stars)}</strong>
+                    {r.hidden ? <span className="pill" style={{ marginLeft: 8 }}>Hidden</span> : null}
+                    <div className="help">{r.comment || "—"}</div>
+                    {reportsByReview.has(r.id) ? (
+                      <div className="err" style={{ marginTop: 4 }}>
+                        Reported: {reportsByReview.get(r.id)!.join(" · ")}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="help">
+                    {personName.get(r.reviewer_id)} → {" "}
+                    <Link href={`/members/${r.reviewee_id}`}>{personName.get(r.reviewee_id)}</Link>
+                  </td>
+                  <td>
+                    <ReviewActions
+                      reviewId={r.id}
+                      hidden={r.hidden}
+                      reportIds={reviewReports.filter((x) => x.review_id === r.id).map((x) => x.id)}
+                    />
                   </td>
                 </tr>
               ))}
