@@ -84,7 +84,7 @@ export function Nav({ profile }: { profile: Profile | null }) {
             height={36}
           />
           <div className="brand-text">
-            <h1>RenoSwap</h1>
+            <h1>RenoSwap<sup style={{ fontSize: "0.45em", marginLeft: "1px" }}>™</sup></h1>
             <span>Leftover reno · swap first</span>
           </div>
         </Link>

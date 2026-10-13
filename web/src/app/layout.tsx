@@ -76,7 +76,7 @@ export default async function RootLayout({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo-64.png" alt="" width={24} height={24} />
               <span>
-                <strong>RenoSwap</strong> · Leftover reno · swap first
+                <strong>RenoSwap™</strong> · Leftover reno · swap first
               </span>
             </div>
           </footer>
