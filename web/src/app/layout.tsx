@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Nunito } from "next/font/google";
 import { getMyProfile } from "@/lib/supabase/my-profile";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { TabBar } from "@/components/TabBar";
 import { ConfigBanner } from "@/components/ConfigBanner";
 import { AuthHashHandler } from "@/components/AuthHashHandler";
 import { createClient } from "@/lib/supabase/server";
@@ -11,14 +12,9 @@ import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const display = Fraunces({
+const ui = Nunito({
   subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-display-face",
-  display: "swap",
-});
-const ui = Inter({
-  subsets: ["latin"],
+  weight: ["400", "600", "700", "800", "900"],
   variable: "--font-ui-face",
   display: "swap",
 });
@@ -64,7 +60,7 @@ export default async function RootLayout({
   const profile = await getProfile();
 
   return (
-    <html lang="en" className={`${display.variable} ${ui.variable}`}>
+    <html lang="en" className={ui.variable}>
       <body>
         <div className="app-shell">
           <Nav profile={profile} />
@@ -81,6 +77,7 @@ export default async function RootLayout({
             </div>
           </footer>
         </div>
+        <TabBar signedIn={!!profile} />
       </body>
     </html>
   );

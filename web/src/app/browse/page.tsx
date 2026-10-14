@@ -83,31 +83,33 @@ export default async function BrowsePage({
 
   return (
     <div className="wrap">
-      <section className="hero">
+      <section className="hero welcome">
         <div className="hero-copy">
           <h2>Leftover reno materials, still useful.</h2>
           <p>
-            Swap or sell leftover reno materials across the U.S. Soft launch —
-            open to early testers anywhere.
+            Swap or sell leftover tile, lumber, paint and more with neighbors.
+            Soft launch — open to early testers across the U.S.
           </p>
           <div className="hero-actions">
-            <Link href="/post" className="primary btn-lg">
-              Post leftovers
-            </Link>
-            <ul className="hero-intents" aria-label="Ways to trade">
-              {INTENTS.map((i) => (
-                <li key={i} className={`intent-dot ${intentClass(i)}`}>
-                  {i}
-                </li>
-              ))}
-            </ul>
+            <a href="#listings" className="btn btn-lg hero-btn">
+              Find materials near you
+            </a>
           </div>
+          <ul className="hero-intents" aria-label="Ways to trade">
+            {INTENTS.map((i) => (
+              <li key={i} className={`badge ${intentClass(i)}`}>
+                {i}
+              </li>
+            ))}
+          </ul>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="hero-art" src="/logo-512.png" alt="" width={168} height={168} />
+        <svg className="hero-house" viewBox="0 0 120 120" aria-hidden="true">
+          <path d="M60 14 12 54h14v48h68V54h14L60 14Z" fill="rgba(255,255,255,.16)" />
+          <path d="M44 78l11 11 22-24" fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </section>
 
-      <form className="filters" method="get" role="search">
+      <form className="filters" method="get" role="search" id="listings">
         <div className="search-field">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path
@@ -160,7 +162,7 @@ export default async function BrowsePage({
             <img src="/logo-64.png" alt="" width={48} height={48} />
           </div>
           <p>No approved listings yet. Be the first to post.</p>
-          <Link href="/post" className="primary">
+          <Link href="/post" className="primary cta">
             Post leftovers
           </Link>
         </div>

@@ -123,7 +123,7 @@ export function OfferForm({ listingId }: { listingId: string }) {
           placeholder="I'd swap my leftover tile for this…"
         />
       </div>
-      <button className="primary" type="submit" disabled={loading}>
+      <button className="primary cta" type="submit" disabled={loading}>
         {loading ? "Sending…" : "Send offer"}
       </button>
     </form>
