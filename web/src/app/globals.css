@@ -421,8 +421,10 @@ input[type="file"]::file-selector-button {
 .filters .search-field input { padding-left: 42px !important; }
 .filters select { font-size: 15px; }
 .filters-submit { grid-column: 1 / -1; width: 100%; }
+.filters-hint { margin: calc(-1 * var(--s-4)) 0 var(--s-4); padding: 0 4px; font-size: 13px; }
+.miles-away { color: var(--teal); font-weight: 600; }
 @media (min-width: 760px) {
-  .filters { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .filters { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1fr) auto; }
   .search-field { grid-column: auto; }
   .filters-submit { grid-column: auto; width: auto; padding: 0 26px; }
 }

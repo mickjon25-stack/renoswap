@@ -14,7 +14,11 @@ type SearchParams = Promise<{
   q?: string;
   category?: string;
   intent?: string;
+  zip?: string;
+  miles?: string;
 }>;
+
+const DISTANCES = [25, 50, 100, 250] as const;
 
 export default async function BrowsePage({
   searchParams,
@@ -25,6 +29,13 @@ export default async function BrowsePage({
   const q = (sp.q || "").trim();
   const category = sp.category || "";
   const intent = sp.intent || "";
+  const zipParam = (sp.zip || "").trim();
+  const milesNum = Number(sp.miles);
+  const radius = (DISTANCES as readonly number[]).includes(milesNum) ? milesNum : null;
+
+  let originZip = "";
+  let zipNotice: string | null = null;
+  const distances: Record<string, number> = {};
 
   let listings: Listing[] = [];
   let fetchError: string | null = null;
@@ -33,11 +44,65 @@ export default async function BrowsePage({
   if (hasSupabaseConfig()) {
     try {
       const supabase = await createClient();
+
+      // Origin ZIP: the typed ZIP wins, otherwise the signed-in user's profile ZIP.
+      if (zipParam) {
+        if (/^\d{5}(-\d{4})?$/.test(zipParam)) originZip = zipParam.slice(0, 5);
+        else zipNotice = "Enter a 5-digit U.S. ZIP to filter by distance.";
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("zip")
+            .eq("id", user.id)
+            .maybeSingle();
+          const pz = ((prof?.zip as string) || "").trim();
+          if (/^\d{5}/.test(pz)) originZip = pz.slice(0, 5);
+        }
+      }
+
+      // Distances are computed server-side (haversine between ZIP centroids)
+      // and come back as whole miles only.
+      let withinIds: string[] | null = null;
+      if (originZip) {
+        const { data: known } = await supabase
+          .from("zip_centroids")
+          .select("zip")
+          .eq("zip", originZip)
+          .maybeSingle();
+        if (!known) {
+          zipNotice = `We couldn't locate ZIP ${originZip}, so showing any distance.`;
+          originZip = "";
+        } else {
+          const { data: drows, error: derr } = await supabase.rpc(
+            "listing_distances",
+            { origin_zip: originZip, max_miles: radius }
+          );
+          if (derr) fetchError = derr.message;
+          else {
+            for (const r of (drows as { listing_id: string; miles: number }[]) || [])
+              distances[r.listing_id] = r.miles;
+            if (radius) withinIds = Object.keys(distances);
+          }
+        }
+      } else if (radius && !zipNotice) {
+        zipNotice = "Add a ZIP to your profile or type one here to filter by distance.";
+      }
+
       const build = () => {
         let query = supabase
           .from("listings")
           .select("*, listing_photos(*)")
           .in("status", ["Approved", "Claimed"]);
+        if (withinIds) {
+          query = query.in(
+            "id",
+            withinIds.length ? withinIds : ["00000000-0000-0000-0000-000000000000"]
+          );
+        }
         if (category) query = query.eq("category", category);
         if (intent === "Swap" || intent === "Sell") {
           query = query.in("intent", [intent, "Sell or Swap"]);
@@ -143,12 +208,42 @@ export default async function BrowsePage({
             </option>
           ))}
         </select>
+        <input
+          name="zip"
+          type="text"
+          inputMode="numeric"
+          pattern="\d{5}"
+          maxLength={5}
+          defaultValue={zipParam}
+          placeholder={originZip && !zipParam ? `ZIP (${originZip})` : "Your ZIP"}
+          aria-label="Distance from ZIP"
+          className="zip-field"
+        />
+        <select name="miles" defaultValue={radius ? String(radius) : ""} aria-label="Distance">
+          <option value="">Any distance</option>
+          {DISTANCES.map((d) => (
+            <option key={d} value={d}>
+              Within {d} miles
+            </option>
+          ))}
+        </select>
         <button className="primary filters-submit" type="submit">
           Filter
         </button>
       </form>
 
-      {/* TODO(phase2): near-me ZIP/radius ranking + notification matching */}
+      {zipNotice ? (
+        <p className="meta filters-hint">{zipNotice}</p>
+      ) : originZip ? (
+        <p className="meta filters-hint">
+          Distances are approximate, from ZIP {originZip}
+          {radius ? ` · within ${radius} miles` : ""}.
+        </p>
+      ) : (
+        <p className="meta filters-hint">
+          Add a ZIP to your profile or type one above to see how far listings are.
+        </p>
+      )}
 
       {fetchError ? <div className="err">{fetchError}</div> : null}
 
@@ -171,7 +266,9 @@ export default async function BrowsePage({
       ) : (
         <div className="grid">
           {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} rating={ratings[l.poster_id]} />
+            <ListingCard key={l.id} listing={l} rating={ratings[l.poster_id]}
+              milesAway={distances[l.id]}
+            />
           ))}
         </div>
       )}

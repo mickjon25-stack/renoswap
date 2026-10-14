@@ -12,7 +12,15 @@ export function intentClass(intent: string) {
   return "swap";
 }
 
-export function ListingCard({ listing, rating }: { listing: Listing; rating?: Rating | null }) {
+export function ListingCard({
+  listing,
+  rating,
+  milesAway,
+}: {
+  listing: Listing;
+  rating?: Rating | null;
+  milesAway?: number;
+}) {
   const photo = primaryPhotoUrl(listing.listing_photos);
   const boosted = isRecentlyBumped(listing.bumped_at);
   const priceLabel =
@@ -62,6 +70,9 @@ export function ListingCard({ listing, rating }: { listing: Listing; rating?: Ra
             />
           </svg>
           {listing.city}, {listing.zip}
+          {typeof milesAway === "number" ? (
+            <span className="miles-away"> · ~{Math.max(1, milesAway)} mi</span>
+          ) : null}
         </div>
         <div className="meta">
           <RatingBadge rating={rating} />
