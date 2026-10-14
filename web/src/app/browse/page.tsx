@@ -39,7 +39,9 @@ export default async function BrowsePage({
           .select("*, listing_photos(*)")
           .in("status", ["Approved", "Claimed"]);
         if (category) query = query.eq("category", category);
-        if (intent) query = query.eq("intent", intent);
+        if (intent === "Swap" || intent === "Sell") {
+          query = query.in("intent", [intent, "Sell or Swap"]);
+        } else if (intent) query = query.eq("intent", intent);
         if (q) {
           query = query.or(
             `title.ilike.%${q}%,description.ilike.%${q}%,city.ilike.%${q}%,looking_for.ilike.%${q}%`
