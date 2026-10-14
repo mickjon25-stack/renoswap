@@ -13,6 +13,7 @@ import {
 import { usZipError } from "@/lib/us-zip";
 import type { Profile } from "@/lib/types";
 import { AvatarEditor } from "@/components/AvatarEditor";
+import { EmailToggles } from "@/components/EmailToggles";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -283,6 +284,13 @@ export default function AccountPage() {
             </Link>
           </div>
         </form>
+        <div className="stack" style={{ marginTop: 24 }}>
+          <h3 style={{ marginBottom: 0 }}>Email alerts</h3>
+          <EmailToggles />
+          <Link href="/alerts" className="ghost">
+            Manage &quot;Looking for&quot; alerts
+          </Link>
+        </div>
       </div>
     </div>
   );

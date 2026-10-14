@@ -90,6 +90,12 @@ export function OfferForm({ listingId }: { listingId: string }) {
         body: trimmed,
       });
       if (msgErr) throw msgErr;
+      // Email the poster about the offer (server-side, throttled). Best effort.
+      await fetch("/api/notify/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ threadId: openThreadId }),
+      }).catch(() => {});
 
       setMessage("");
       setThreadId(openThreadId);

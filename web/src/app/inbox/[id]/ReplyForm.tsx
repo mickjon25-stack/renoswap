@@ -32,6 +32,12 @@ export function ReplyForm({ threadId }: { threadId: string }) {
         body: trimmed,
       });
       if (insertErr) throw insertErr;
+      // Email the other person (server throttles + checks prefs). Best effort.
+      void fetch("/api/notify/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ threadId }),
+      }).catch(() => {});
 
       setBody("");
       router.refresh();

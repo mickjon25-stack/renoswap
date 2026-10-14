@@ -44,6 +44,12 @@ export function AdminActions({
         .update(patch)
         .eq("id", listingId);
       if (err) throw err;
+      // Email members whose "Looking for" alerts match. Best effort.
+      await fetch("/api/notify/listing-approved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId }),
+      }).catch(() => {});
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Approve failed");
