@@ -258,7 +258,7 @@ export default async function BrowsePage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-64.png" alt="" width={48} height={48} />
           </div>
-          <p>No approved listings yet. Be the first to post.</p>
+          <p>{radius || category || intent || q ? "Nothing matches these filters yet. Try a wider distance or fewer filters." : "No approved listings yet. Be the first to post."}</p>
           <Link href="/post" className="primary cta">
             Post leftovers
           </Link>
