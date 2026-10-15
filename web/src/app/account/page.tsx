@@ -14,6 +14,7 @@ import { usZipError } from "@/lib/us-zip";
 import type { Profile } from "@/lib/types";
 import { AvatarEditor } from "@/components/AvatarEditor";
 import { EmailToggles } from "@/components/EmailToggles";
+import { DeleteAccount } from "@/components/DeleteAccount";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -291,6 +292,7 @@ export default function AccountPage() {
             Manage &quot;Looking for&quot; alerts
           </Link>
         </div>
+        <DeleteAccount />
       </div>
     </div>
   );

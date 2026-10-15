@@ -31,14 +31,14 @@ export default async function MemberPage({ params }: { params: Params }) {
     .order("created_at", { ascending: false })
     .limit(50);
   const rows =
-    (reviews as { id: string; stars: number; comment: string; created_at: string; reviewer_id: string }[]) || [];
+    (reviews as { id: string; stars: number; comment: string; created_at: string; reviewer_id: string | null }[]) || [];
   const { data: reviewers } = rows.length
-    ? await supabase.from("profiles").select("id, display_name").in("id", rows.map((r) => r.reviewer_id))
+    ? await supabase.from("profiles").select("id, display_name").in("id", rows.map((r) => r.reviewer_id).filter((x): x is string => !!x))
     : { data: [] };
   const names = new Map(
     ((reviewers as { id: string; display_name: string | null }[]) || []).map((p) => [p.id, p.display_name])
   );
-  const list = rows.map((r) => ({ ...r, name: names.get(r.reviewer_id) || "Member" }));
+  const list = rows.map((r) => ({ ...r, name: r.reviewer_id ? names.get(r.reviewer_id) || "Member" : "Deleted member" }));
 
   return (
     <div className="wrap stack">

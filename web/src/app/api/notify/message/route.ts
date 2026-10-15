@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ sent: false, reason: "no recent message" });
   }
   const recipientId = thread.participant_a === user.id ? thread.participant_b : thread.participant_a;
+  if (!recipientId) return NextResponse.json({ sent: false, reason: "recipient deleted" });
   const isOffer = (msgs?.length ?? 0) === 1;
 
   const prefs = await getPrefs(svc, recipientId);

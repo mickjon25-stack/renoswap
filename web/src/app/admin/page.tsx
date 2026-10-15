@@ -69,14 +69,14 @@ export default async function AdminPage() {
       .select("id, review_id, reason")
       .eq("status", "Pending"),
   ]);
-  type AdminReview = { id: string; stars: number; comment: string; hidden: boolean; created_at: string; reviewer_id: string; reviewee_id: string };
+  type AdminReview = { id: string; stars: number; comment: string; hidden: boolean; created_at: string; reviewer_id: string | null; reviewee_id: string };
   const adminReviews = (reviewRows as AdminReview[]) || [];
   const reviewReports = (reviewReportRows as { id: string; review_id: string; reason: string }[]) || [];
   const reportsByReview = new Map<string, string[]>();
   for (const rr of reviewReports) {
     reportsByReview.set(rr.review_id, [...(reportsByReview.get(rr.review_id) || []), rr.reason || "(no reason)"]);
   }
-  const reviewPeopleIds = Array.from(new Set(adminReviews.flatMap((r) => [r.reviewer_id, r.reviewee_id])));
+  const reviewPeopleIds = Array.from(new Set(adminReviews.flatMap((r) => [r.reviewer_id, r.reviewee_id]).filter((x): x is string => !!x)));
   const { data: reviewPeople } = reviewPeopleIds.length
     ? await supabase.from("profiles").select("id, display_name").in("id", reviewPeopleIds)
     : { data: [] };
@@ -235,7 +235,7 @@ export default async function AdminPage() {
                     ) : null}
                   </td>
                   <td className="help">
-                    {personName.get(r.reviewer_id)} → {" "}
+                    {r.reviewer_id ? personName.get(r.reviewer_id) : "Deleted member"} → {" "}
                     <Link href={`/members/${r.reviewee_id}`}>{personName.get(r.reviewee_id)}</Link>
                   </td>
                   <td>

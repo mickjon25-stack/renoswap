@@ -11,8 +11,8 @@ type ThreadRow = {
   id: string;
   listing_id: string | null;
   offer_id: string | null;
-  participant_a: string;
-  participant_b: string;
+  participant_a: string | null;
+  participant_b: string | null;
   created_at: string;
   updated_at: string;
   listings: { id: string; title: string; status: string } | null;
@@ -86,9 +86,9 @@ export default async function InboxPage() {
 
   const counterpartIds = [
     ...new Set(
-      threads.map((t) =>
-        t.participant_a === user.id ? t.participant_b : t.participant_a
-      )
+      threads
+        .map((t) => (t.participant_a === user.id ? t.participant_b : t.participant_a))
+        .filter((id): id is string => !!id)
     ),
   ];
 
@@ -135,19 +135,20 @@ export default async function InboxPage() {
         <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
           <ul className="inbox-list">
             {rows.map(({ thread, otherId, last, sortAt }) => {
-              const other = profileById.get(otherId);
+              const other = otherId ? profileById.get(otherId) : undefined;
+              const otherName = otherId ? other?.display_name || "Member" : "Deleted member";
               const title = thread.listings?.title || "Listing";
               return (
                 <li key={thread.id}>
                   <Link href={`/inbox/${thread.id}`} className="inbox-row">
-                    <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} size="sm" />
+                    <Avatar url={other?.avatar_url} name={otherName} size="sm" />
                     <div className="inbox-row-body">
                       <div className="row" style={{ gap: 8 }}>
                         <strong>{title}</strong>
                         <span className="meta">{formatWhen(sortAt)}</span>
                       </div>
                       <div className="meta">
-                        with {other?.display_name || "Member"}
+                        with {otherName}
                       </div>
                       <div className="inbox-preview">
                         {last

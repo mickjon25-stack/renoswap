@@ -17,8 +17,8 @@ type ThreadDetail = {
   id: string;
   listing_id: string | null;
   offer_id: string | null;
-  participant_a: string;
-  participant_b: string;
+  participant_a: string | null;
+  participant_b: string | null;
   created_at: string;
   listings: { id: string; title: string; status: string } | null;
   offers: { id: string; status: string; message: string } | null;
@@ -88,12 +88,13 @@ export default async function ThreadPage({ params }: { params: Params }) {
       ? thread.participant_b
       : thread.participant_a;
 
+  const otherDeleted = !otherId;
   const [{ data: otherProfile }, { data: messages, error: msgErr }, { data: tradeRow }, ratings] =
     await Promise.all([
       supabase
         .from("profiles")
         .select("id, display_name, avatar_url, city")
-        .eq("id", otherId)
+        .eq("id", otherId ?? "00000000-0000-0000-0000-000000000000")
         .maybeSingle(),
       supabase
         .from("messages")
@@ -105,7 +106,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
         .select("id, status, requested_by")
         .eq("thread_id", id)
         .maybeSingle(),
-      fetchRatings(supabase, [otherId]),
+      fetchRatings(supabase, otherId ? [otherId] : []),
     ]);
   const trade = (tradeRow as TradeInfo) || null;
   let myReview: { stars: number; comment: string } | null = null;
@@ -145,13 +146,17 @@ export default async function ThreadPage({ params }: { params: Params }) {
             </h2>
             <div className="meta">
               with{" "}
-              <Link href={`/members/${otherId}`}>{other?.display_name || "Member"}</Link>
+              {otherDeleted ? (
+                "Deleted member"
+              ) : (
+                <Link href={`/members/${otherId}`}>{other?.display_name || "Member"}</Link>
+              )}
               {other?.city ? ` · ${other.city}` : ""}
               {offer?.status ? ` · Offer ${offer.status}` : ""}
             </div>
-            <RatingBadge rating={ratings[otherId]} />
+            {otherId ? <RatingBadge rating={ratings[otherId]} /> : null}
           </div>
-          <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} />
+          <Avatar url={other?.avatar_url} name={otherDeleted ? "Deleted member" : other?.display_name || "Member"} />
         </div>
       </div>
 
@@ -175,7 +180,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
                     {mine ? null : (
                       <Avatar url={other?.avatar_url} name={other?.display_name || "Member"} size="xs" />
                     )}
-                    {mine ? "You" : other?.display_name || "Them"} ·{" "}
+                    {mine ? "You" : m.sender_id && !otherDeleted ? other?.display_name || "Them" : "Deleted member"} ·{" "}
                     {formatWhen(m.created_at)}
                   </div>
                   <div className="message-body">{m.body}</div>
@@ -184,10 +189,16 @@ export default async function ThreadPage({ params }: { params: Params }) {
             })}
           </ul>
         )}
-        <ReplyForm threadId={thread.id} />
+        {otherDeleted ? (
+          <div className="help" style={{ padding: 12 }}>
+            This member deleted their account, so you can&apos;t reply.
+          </div>
+        ) : (
+          <ReplyForm threadId={thread.id} />
+        )}
       </div>
 
-      {listing ? (
+      {listing && otherId ? (
         <TradePanel
           threadId={thread.id}
           userId={user.id}

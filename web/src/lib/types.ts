@@ -74,8 +74,8 @@ export type Thread = {
   id: string;
   listing_id: string | null;
   offer_id: string | null;
-  participant_a: string;
-  participant_b: string;
+  participant_a: string | null;
+  participant_b: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -83,7 +83,7 @@ export type Thread = {
 export type Message = {
   id: string;
   thread_id: string;
-  sender_id: string;
+  sender_id: string | null;
   body: string;
   created_at: string;
 };
