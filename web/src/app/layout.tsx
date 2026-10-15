@@ -75,6 +75,14 @@ export default async function RootLayout({
                 <strong>RenoSwap™</strong> · Leftover reno · swap first
               </span>
             </div>
+            <nav className="site-footer-links" aria-label="Legal">
+              <a href="/terms">Terms</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/prohibited">Prohibited items</a>
+              <a href="/safety">Safety tips</a>
+              <a href="mailto:RenoSwap101@gmail.com">Contact</a>
+            </nav>
+            <p className="site-footer-legal">© 2026 RenoSwap LLC · Moulton, Texas</p>
           </footer>
         </div>
         <TabBar signedIn={!!profile} />

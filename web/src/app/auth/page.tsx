@@ -8,6 +8,7 @@ import {
   MISSING_SUPABASE_ENV_MESSAGE,
 } from "@/lib/supabase/env";
 import { friendlyAuthError } from "@/lib/auth-messages";
+import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 
 type Mode = "signin" | "signup" | "reset";
 /** Screens shown instead of the form after an email was (or wasn't) sent. */
@@ -47,6 +48,7 @@ function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<Done>(null);
   const [showResend, setShowResend] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const configured = hasSupabaseConfig();
 
   useEffect(() => {
@@ -132,12 +134,22 @@ function AuthForm() {
       }
 
       if (mode === "signup") {
+        if (!agreed && formData.get("agreeTerms") !== "on") {
+          setError("Please confirm you're 18 or older and agree to the Terms and Privacy Policy.");
+          return;
+        }
         const name = currentDisplayName.trim() || currentEmail.split("@")[0];
         const { data, error: err } = await supabase.auth.signUp({
           email: currentEmail,
           password: currentPassword,
           options: {
-            data: { display_name: name },
+            data: {
+              display_name: name,
+              terms_accepted: true,
+              terms_version: TERMS_VERSION,
+              privacy_version: PRIVACY_VERSION,
+              terms_accepted_at: new Date().toISOString(),
+            },
             emailRedirectTo: `${origin}/auth/callback?next=/account`,
           },
         });
@@ -365,10 +377,27 @@ function AuthForm() {
             {mode === "signup" ? <p className="help">At least 6 characters.</p> : null}
           </div>
         ) : null}
+        {mode === "signup" ? (
+          <label className="terms-check" htmlFor="agreeTerms">
+            <input
+              id="agreeTerms"
+              name="agreeTerms"
+              type="checkbox"
+              required
+              checked={agreed}
+              onChange={(e) => setAgreed(e.currentTarget.checked)}
+            />
+            <span>
+              I&apos;m 18 or older and agree to the{" "}
+              <a href="/terms" target="_blank" rel="noopener">Terms</a> and{" "}
+              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+          </label>
+        ) : null}
         <button
           className="primary auth-submit"
           type="submit"
-          disabled={loading || !configured}
+          disabled={loading || !configured || (mode === "signup" && !agreed)}
         >
           {submitLabel}
         </button>
