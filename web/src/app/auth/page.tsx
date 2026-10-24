@@ -37,9 +37,12 @@ async function ensureProfile(
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<Mode>(
-    searchParams.get("mode") === "signup" ? "signup" : "signin"
-  );
+  const [mode, setMode] = useState<Mode>(() => {
+    const m = searchParams.get("mode");
+    if (m === "signup") return "signup";
+    if (m === "reset") return "reset";
+    return "signin";
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -125,8 +128,15 @@ function AuthForm() {
       const origin = window.location.origin;
 
       if (mode === "reset") {
+        // Prefer the live domain so the email link works even if the user opened
+        // an old vercel.app alias. Supabase still falls back to Site URL when the
+        // redirect isn't allow-listed — AuthHashHandler then routes type=recovery.
+        const resetOrigin =
+          origin.includes("renoswap.com") || origin.includes("localhost")
+            ? origin
+            : "https://renoswap.com";
         const { error: err } = await supabase.auth.resetPasswordForEmail(currentEmail, {
-          redirectTo: `${origin}/auth/callback?next=/auth/reset`,
+          redirectTo: `${resetOrigin}/auth/callback?next=/auth/reset`,
         });
         if (err) throw err;
         setDone({ kind: "reset", email: currentEmail });
@@ -404,7 +414,12 @@ function AuthForm() {
       </form>
       <div className="auth-links">
         {mode === "signin" ? (
-          <button type="button" className="link-btn" onClick={() => switchMode("reset")}>
+          <button
+            type="button"
+            className="link-btn"
+            style={{ fontWeight: 700, textDecoration: "underline", fontSize: 15 }}
+            onClick={() => switchMode("reset")}
+          >
             Forgot password?
           </button>
         ) : mode === "reset" ? (
