@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LeaveReviewForm } from "@/components/LeaveReviewForm";
 
 export type TradeInfo = {
   id: string;
@@ -28,10 +29,8 @@ export function TradePanel({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stars, setStars] = useState(0);
-  const [comment, setComment] = useState("");
 
-  async function run(fn: () => PromiseLike<{ error: { message: string } | null }>) {
+  async function run(fn: () => PromiseLike<{ data?: unknown; error: { message: string } | null }>) {
     setBusy(true);
     setError(null);
     try {
@@ -39,7 +38,12 @@ export function TradePanel({
       if (err) throw new Error(err.message);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const raw = e instanceof Error ? e.message : "Something went wrong";
+      setError(
+        /row-level security|permission denied|42501/i.test(raw)
+          ? "Couldn't save your review. Try again, or open this conversation from Inbox → Trade & review."
+          : raw
+      );
     } finally {
       setBusy(false);
     }
@@ -47,37 +51,33 @@ export function TradePanel({
 
   const supabase = createClient();
 
-  async function submitReview(e: FormEvent) {
-    e.preventDefault();
-    if (!trade) return;
-    if (stars < 1) {
-      setError("Pick 1 to 5 stars.");
-      return;
-    }
-    await run(() =>
-      supabase.from("reviews").insert({
-        trade_id: trade.id,
-        reviewer_id: userId,
-        reviewee_id: otherId,
-        stars,
-        comment: comment.trim().slice(0, 500),
-      })
-    );
-  }
 
   let body: React.ReactNode;
   if (!trade || trade.status === "Cancelled") {
     body = (
       <>
         <p className="help" style={{ marginTop: 0 }}>
-          Done swapping or selling? Mark it complete. Once {otherName} confirms,
-          you can both leave a review.
+          Finished the swap or sale? Tap below. {otherName} will get a chance to
+          confirm in this chat — <strong>after they confirm, you can rate them
+          here</strong> (1–5 stars). You rate the person, not the listing.
         </p>
         <button
           className="primary"
           type="button"
           disabled={busy}
-          onClick={() => run(() => supabase.rpc("request_trade_complete", { p_thread_id: threadId }))}
+          onClick={() =>
+            run(async () => {
+              const res = await supabase.rpc("request_trade_complete", { p_thread_id: threadId });
+              if (!res.error) {
+                await fetch("/api/notify/message", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ threadId }),
+                }).catch(() => {});
+              }
+              return res;
+            })
+          }
         >
           Mark trade complete
         </button>
@@ -87,7 +87,9 @@ export function TradePanel({
     body = (
       <>
         <p className="help" style={{ marginTop: 0 }}>
-          Waiting for {otherName} to confirm the trade.
+          Waiting for <strong>{otherName}</strong> to tap &quot;Yes, confirm
+          trade&quot; in their Inbox. Reviews unlock only after they confirm.
+          Ask them to open this conversation and confirm.
         </p>
         <button
           className="ghost"
@@ -135,42 +137,12 @@ export function TradePanel({
     );
   } else {
     body = (
-      <form onSubmit={submitReview}>
-        <p className="help" style={{ marginTop: 0 }}>
-          Trade confirmed. How did it go with {otherName}? They won&apos;t see
-          your review until they leave one too (or after 7 days).
-        </p>
-        <div className="star-picker" role="radiogroup" aria-label="Stars">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              className={n <= stars ? "on" : ""}
-              aria-label={`${n} star${n > 1 ? "s" : ""}`}
-              aria-checked={n === stars}
-              role="radio"
-              onClick={() => setStars(n)}
-            >
-              ★
-            </button>
-          ))}
-        </div>
-        <div className="field">
-          <label htmlFor="review-comment">Comment (optional)</label>
-          <textarea
-            id="review-comment"
-            rows={3}
-            maxLength={500}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Showed up on time, tile was as pictured."
-          />
-          <div className="help">{comment.length}/500</div>
-        </div>
-        <button className="primary" type="submit" disabled={busy}>
-          {busy ? "Saving…" : "Post review"}
-        </button>
-      </form>
+      <LeaveReviewForm
+        tradeId={trade!.id}
+        reviewerId={userId}
+        revieweeId={otherId}
+        revieweeName={otherName}
+      />
     );
   }
 
