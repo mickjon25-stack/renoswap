@@ -184,7 +184,7 @@ export default async function InboxPage() {
                     <div style={{ padding: "0 16px 12px" }}>
                       <LinkedListings
                         label="🔁 Offered in swap"
-                        items={offeredByThread.get(thread.id)!.map((id) => offeredCards.get(id)).filter((x): x is NonNullable<typeof x> => !!x)}
+                        items={[...new Set(offeredByThread.get(thread.id)!)].map((id) => offeredCards.get(id)).filter((x): x is NonNullable<typeof x> => !!x)}
                       />
                     </div>
                   ) : null}
