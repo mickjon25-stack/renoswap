@@ -156,7 +156,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                 Sends an offer and opens a thread in your{" "}
                 <Link href="/inbox">Inbox</Link>.
               </p>
-              <OfferForm listingId={listing.id} />
+              <OfferForm listingId={listing.id} allowSwap={listing.intent !== "Sell"} />
             </div>
           ) : null}
 

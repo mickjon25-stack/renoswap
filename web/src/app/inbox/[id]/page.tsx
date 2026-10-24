@@ -8,6 +8,8 @@ import { ReplyForm } from "./ReplyForm";
 import { TradePanel, type TradeInfo } from "./TradePanel";
 import { RatingBadge } from "@/components/RatingBadge";
 import { fetchRatings } from "@/lib/ratings";
+import { LinkedListings } from "@/components/LinkedListings";
+import { loadLinkedListings, offeredListingIds } from "@/lib/offer-listings";
 
 export const dynamic = "force-dynamic";
 
@@ -120,6 +122,23 @@ export default async function ThreadPage({ params }: { params: Params }) {
     myReview = (rv as { stars: number; comment: string } | null) || null;
   }
 
+  // Listings offered in swap on this conversation's listing by either participant.
+  let offeredIds: string[] = [];
+  let offeredByMe = false;
+  if (thread.listing_id) {
+    const { data: offerRows } = await supabase
+      .from("offers")
+      .select("id, from_user_id")
+      .eq("listing_id", thread.listing_id)
+      .in("from_user_id", [thread.participant_a, thread.participant_b].filter((x): x is string => !!x))
+      .order("created_at", { ascending: true });
+    const rows = (offerRows as { id: string; from_user_id: string }[] | null) || [];
+    const map = await offeredListingIds(supabase, rows.map((r) => r.id));
+    offeredIds = rows.flatMap((r) => map.get(r.id) || []);
+    offeredByMe = rows.some((r) => r.from_user_id === user.id && (map.get(r.id) || []).length > 0);
+  }
+  const offered = await loadLinkedListings(supabase, offeredIds);
+
   const other = otherProfile as Pick<
     Profile,
     "id" | "display_name" | "avatar_url" | "city"
@@ -159,6 +178,15 @@ export default async function ThreadPage({ params }: { params: Params }) {
           <Avatar url={other?.avatar_url} name={otherDeleted ? "Deleted member" : other?.display_name || "Member"} />
         </div>
       </div>
+
+      {offered.length ? (
+        <div className="panel" style={{ marginTop: 12 }}>
+          <LinkedListings
+            items={offered}
+            label={offeredByMe ? "🔁 You offered in swap" : `🔁 ${other?.display_name || "They"} offered in swap`}
+          />
+        </div>
+      ) : null}
 
       {msgErr ? <div className="err">{msgErr.message}</div> : null}
 

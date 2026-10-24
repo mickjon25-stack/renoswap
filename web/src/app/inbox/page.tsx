@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import type { Message, Profile } from "@/lib/types";
+import { LinkedListings } from "@/components/LinkedListings";
+import { loadLinkedListings, offeredListingIds } from "@/lib/offer-listings";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +105,27 @@ export default async function InboxPage() {
     }
   }
 
+  // Swap listings offered per thread (offers on the thread's listing by its participants).
+  const offeredByThread = new Map<string, string[]>();
+  const listingIds = [...new Set(threads.map((t) => t.listing_id).filter((x): x is string => !!x))];
+  if (listingIds.length) {
+    const { data: offerRows } = await supabase
+      .from("offers")
+      .select("id, listing_id, from_user_id")
+      .in("listing_id", listingIds);
+    const offersList = (offerRows as { id: string; listing_id: string; from_user_id: string }[] | null) || [];
+    const map = await offeredListingIds(supabase, offersList.map((o) => o.id));
+    for (const t of threads) {
+      const ids = offersList
+        .filter((o) => o.listing_id === t.listing_id && (o.from_user_id === t.participant_a || o.from_user_id === t.participant_b))
+        .flatMap((o) => map.get(o.id) || []);
+      if (ids.length) offeredByThread.set(t.id, ids);
+    }
+  }
+  const offeredCards = new Map(
+    (await loadLinkedListings(supabase, [...offeredByThread.values()].flat())).map((l) => [l.id, l])
+  );
+
   const rows = threads
     .map((t) => {
       const otherId = t.participant_a === user.id ? t.participant_b : t.participant_a;
@@ -157,6 +180,14 @@ export default async function InboxPage() {
                       </div>
                     </div>
                   </Link>
+                  {offeredByThread.has(thread.id) ? (
+                    <div style={{ padding: "0 16px 12px" }}>
+                      <LinkedListings
+                        label="🔁 Offered in swap"
+                        items={offeredByThread.get(thread.id)!.map((id) => offeredCards.get(id)).filter((x): x is NonNullable<typeof x> => !!x)}
+                      />
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
