@@ -865,3 +865,15 @@ body { line-height: 1.55; }
 .pick-item.on { border-color: var(--teal); background: var(--green-soft); }
 .pick-item input { width: 22px; height: 22px; flex: 0 0 22px; margin: 0; accent-color: var(--teal); }
 .inbox-linked { font-size: 13px; color: var(--teal-dark); font-family: var(--font-ui); margin-top: 2px; }
+
+/* Swap-link emphasis: neon green, bold, underlined, obvious tap state */
+:root { --neon: #2bff88; --neon-ink: #04351c; --neon-link: #00873d; }
+.linked-card { border: 2px solid var(--neon); box-shadow: 0 0 0 3px rgba(43,255,136,.18); transition: transform .08s, box-shadow .15s; -webkit-tap-highlight-color: rgba(43,255,136,.3); }
+.linked-card:hover, .linked-card:focus-visible { border-color: var(--neon); box-shadow: 0 0 0 4px rgba(43,255,136,.4); }
+.linked-card:active { transform: scale(.98); background: #effff5; }
+.linked-text { flex: 1; min-width: 0; }
+.linked-card .linked-title { display: block; color: var(--neon-link); font-weight: 800; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.linked-go { flex: 0 0 auto; background: var(--neon); color: var(--neon-ink); font: 800 13px var(--font-ui); text-decoration: underline; padding: 8px 10px; border-radius: 999px; white-space: nowrap; font-size: 13px; }
+.swap-link { color: var(--neon-link); font-weight: 800; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; background: rgba(43,255,136,.22); padding: 1px 4px; border-radius: 4px; }
+.swap-link:active { background: var(--neon); color: var(--neon-ink); }
+.message-bubble.mine .swap-link { color: var(--neon-ink); background: var(--neon); }

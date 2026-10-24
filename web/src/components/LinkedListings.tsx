@@ -18,8 +18,8 @@ export function LinkedListings({ items, label }: { items: LinkedListing[]; label
               ) : (
                 <span className="linked-thumb linked-thumb-empty" aria-hidden>📦</span>
               )}
-              <span className="linked-title">{l.title}</span>
-              <span className="linked-go" aria-hidden>›</span>
+              <span className="linked-text"><span className="linked-title">{l.title}</span></span>
+              <span className="linked-go">View listing →</span>
             </Link>
           </li>
         ))}

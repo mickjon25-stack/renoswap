@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { notFound, redirect } from "next/navigation";
@@ -43,6 +44,30 @@ function formatWhen(iso: string) {
   } catch {
     return "";
   }
+}
+
+const SWAP_PREFIX = "🔁 Offering in swap: ";
+/** Turns the "🔁 Offering in swap: A, B" line into links to the offered listings. */
+function renderBody(body: string, offered: { id: string; title: string }[]) {
+  const i = body.indexOf(SWAP_PREFIX);
+  if (i < 0 || !offered.length) return body;
+  let rest = body.slice(i + SWAP_PREFIX.length);
+  const parts: React.ReactNode[] = [];
+  const sorted = [...offered].sort((a, b) => b.title.length - a.title.length);
+  let guard = 0;
+  while (rest.length && guard++ < 20) {
+    const hit = sorted.find((o) => rest.startsWith(o.title));
+    if (!hit) break;
+    parts.push(
+      <Link key={parts.length} href={`/listings/${hit.id}`} className="swap-link">
+        {hit.title} →
+      </Link>
+    );
+    rest = rest.slice(hit.title.length);
+    if (rest.startsWith(", ")) { parts.push(", "); rest = rest.slice(2); } else break;
+  }
+  if (!parts.length) return body;
+  return (<>{body.slice(0, i)}{SWAP_PREFIX}{parts}{rest}</>);
 }
 
 export default async function ThreadPage({ params }: { params: Params }) {
@@ -211,7 +236,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
                     {mine ? "You" : m.sender_id && !otherDeleted ? other?.display_name || "Them" : "Deleted member"} ·{" "}
                     {formatWhen(m.created_at)}
                   </div>
-                  <div className="message-body">{m.body}</div>
+                  <div className="message-body">{renderBody(m.body, offered)}</div>
                 </li>
               );
             })}
