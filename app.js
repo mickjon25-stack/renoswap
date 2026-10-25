@@ -11,7 +11,8 @@ const CATEGORIES = [
   "Electrical & lighting",
   "Plumbing",
   "Tools & equipment",
-  "Deck, fence & outdoor"
+  "Deck, fence & outdoor",
+  "Driveways & hardscape"
 ];
 
 const CONDITIONS = [

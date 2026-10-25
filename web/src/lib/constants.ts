@@ -11,6 +11,7 @@ export const CATEGORIES = [
   "Plumbing",
   "Tools & equipment",
   "Deck, fence & outdoor",
+  "Driveways & hardscape",
 ] as const;
 
 export const CONDITIONS = [
