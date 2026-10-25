@@ -18,11 +18,12 @@ export async function GET(request: Request) {
   const otpType = searchParams.get("type") as EmailOtpType | null;
 
   if (!code && !(tokenHash && otpType)) {
-    // Implicit-flow links carry tokens in the #fragment (invisible here); the
-    // browser keeps the fragment across this redirect and AuthHashHandler
-    // finishes sign-in, then continues to `next`.
+    // Implicit-flow links (admin generateLink, some email templates) carry
+    // tokens in the #fragment, which the server never sees. Redirect to /auth
+    // without an error so AuthHashHandler can finish sign-in; if there is no
+    // hash either, the user just sees the sign-in form.
     return NextResponse.redirect(
-      `${origin}/auth?error=missing_code&next=${encodeURIComponent(next)}`
+      `${origin}/auth?next=${encodeURIComponent(next)}`
     );
   }
 
