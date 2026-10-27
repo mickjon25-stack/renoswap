@@ -154,6 +154,7 @@ export default async function AdminPage() {
                         listingId={l.id}
                         intent={l.intent}
                         fastWindowHours={l.fast_window_hours}
+                        photoCount={l.listing_photos?.length ?? 0}
                       />
                     </td>
                   </tr>

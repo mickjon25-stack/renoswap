@@ -8,16 +8,23 @@ export function AdminActions({
   listingId,
   intent,
   fastWindowHours,
+  photoCount = 0,
 }: {
   listingId: string;
   intent: string;
   fastWindowHours: number;
+  photoCount?: number;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const needsPhoto = photoCount < 1;
 
   async function approve() {
+    if (needsPhoto) {
+      setError("Needs a photo before approve.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -83,8 +90,19 @@ export function AdminActions({
   return (
     <div className="stack">
       {error ? <div className="err">{error}</div> : null}
+      {needsPhoto ? (
+        <p className="help" style={{ margin: 0, color: "#a33" }}>
+          Needs a photo before approve.
+        </p>
+      ) : null}
       <div className="actions">
-        <button className="primary" type="button" disabled={busy} onClick={approve}>
+        <button
+          className="primary"
+          type="button"
+          disabled={busy || needsPhoto}
+          onClick={approve}
+          title={needsPhoto ? "Needs a photo before approve." : undefined}
+        >
           Approve
         </button>
         <button className="danger" type="button" disabled={busy} onClick={reject}>

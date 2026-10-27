@@ -95,7 +95,7 @@ export default async function BrowsePage({
       const build = () => {
         let query = supabase
           .from("listings")
-          .select("*, listing_photos(*)")
+          .select("*, listing_photos!inner(*)")
           .in("status", ["Approved", "Claimed"]);
         if (withinIds) {
           query = query.in(
