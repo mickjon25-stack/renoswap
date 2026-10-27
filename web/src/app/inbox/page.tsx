@@ -3,6 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { formatWhen } from "@/lib/datetime";
 import type { Message, Profile } from "@/lib/types";
 import { LinkedListings } from "@/components/LinkedListings";
 import { loadLinkedListings, offeredListingIds } from "@/lib/offer-listings";
@@ -29,19 +30,6 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 function previewBody(body: string, max = 90) {
   const t = body.trim().replace(/\s+/g, " ");
   return t.length > max ? `${t.slice(0, max)}…` : t;
-}
-
-function formatWhen(iso: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
 }
 
 export default async function InboxPage() {

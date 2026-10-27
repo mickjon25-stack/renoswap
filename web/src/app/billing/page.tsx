@@ -17,6 +17,7 @@ import {
   SubscribeButton,
 } from "@/components/SubscribeButtons";
 import type { Profile } from "@/lib/types";
+import { formatAppDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -111,7 +112,7 @@ export default async function BillingPage({
         <p className="meta" style={{ margin: 0 }}>
           Active listings: {activeCount} / {cap}
           {p?.plan_period_end
-            ? ` · Renews / ends ${new Date(p.plan_period_end).toLocaleDateString()}`
+            ? ` · Renews / ends ${formatAppDate(p.plan_period_end)}`
             : ""}
         </p>
         {p?.stripe_customer_id ? (

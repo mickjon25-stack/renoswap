@@ -4,6 +4,7 @@ import { Avatar } from "@/components/Avatar";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
+import { formatWhen } from "@/lib/datetime";
 import type { Message, Profile } from "@/lib/types";
 import { ReplyForm } from "./ReplyForm";
 import { TradePanel, type TradeInfo } from "./TradePanel";
@@ -31,19 +32,6 @@ type ThreadDetail = {
 function one<T>(value: T | T[] | null | undefined): T | null {
   if (value == null) return null;
   return Array.isArray(value) ? value[0] ?? null : value;
-}
-
-function formatWhen(iso: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
 }
 
 const SWAP_PREFIX = "🔁 Offering in swap: ";

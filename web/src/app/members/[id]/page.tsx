@@ -3,6 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { RatingBadge } from "@/components/RatingBadge";
 import { createClient } from "@/lib/supabase/server";
 import { fetchRatings } from "@/lib/ratings";
+import { formatAppDate } from "@/lib/datetime";
 import Link from "next/link";
 import { ReportReview } from "./ReportReview";
 import { LeaveReviewForm } from "@/components/LeaveReviewForm";
@@ -155,7 +156,7 @@ export default async function MemberPage({ params }: { params: Params }) {
                   {r.comment ? <p style={{ margin: "4px 0" }}>{r.comment}</p> : null}
                   <div className="help">
                     {r.name} ·{" "}
-                    {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                    {formatAppDate(r.created_at)}
                   </div>
                 </li>
               );
