@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase/env";
 import { friendlyAuthError } from "@/lib/auth-messages";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
+import { authReasonNotice, safeAuthNext } from "@/lib/auth-next";
 
 type Mode = "signin" | "signup" | "reset";
 /** Screens shown instead of the form after an email was (or wasn't) sent. */
@@ -54,6 +55,7 @@ function AuthForm() {
   const [showResend, setShowResend] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const configured = hasSupabaseConfig();
+  const nextPath = safeAuthNext(searchParams.get("next"), "/browse");
 
   useEffect(() => {
     const q = searchParams.get("error");
@@ -69,12 +71,14 @@ function AuthForm() {
             : friendlyAuthError(decodeURIComponent(q))
       );
     }
+    const why = authReasonNotice(searchParams.get("reason"));
+    if (why) setNotice(why);
   }, [searchParams]);
 
-  function switchMode(next: Mode) {
-    setMode(next);
+  function switchMode(nextMode: Mode) {
+    setMode(nextMode);
     setError(null);
-    setNotice(null);
+    setNotice(authReasonNotice(searchParams.get("reason")));
     setShowResend(false);
     setDone(null);
   }
@@ -89,7 +93,7 @@ function AuthForm() {
         type: "signup",
         email: address,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeAuthNext(searchParams.get("next"), "/account"))}`,
         },
       });
       if (err) throw err;
@@ -163,7 +167,7 @@ function AuthForm() {
               privacy_version: PRIVACY_VERSION,
               terms_accepted_at: new Date().toISOString(),
             },
-            emailRedirectTo: `${origin}/auth/callback?next=/account`,
+            emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(safeAuthNext(searchParams.get("next"), "/account"))}`,
           },
         });
         if (err) throw err;
@@ -180,7 +184,7 @@ function AuthForm() {
         }
 
         if (data.session) {
-          router.push("/account");
+          router.push(safeAuthNext(searchParams.get("next"), "/account"));
           router.refresh();
           return;
         }
@@ -211,7 +215,7 @@ function AuthForm() {
             currentEmail.split("@")[0]
         );
       }
-      router.push("/browse");
+      router.push(nextPath);
       router.refresh();
     } catch (err) {
       setError(friendlyAuthError(err));

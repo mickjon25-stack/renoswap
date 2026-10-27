@@ -20,6 +20,7 @@ export default function PostPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [capBlocked, setCapBlocked] = useState(false);
   const [capInfo, setCapInfo] = useState<{ active: number; cap: number } | null>(
@@ -53,14 +54,15 @@ export default function PostPage() {
         const user = await resolveClientUser();
         if (cancelled) return;
         if (!user) {
-          router.replace("/auth");
+          setNeedsAuth(true);
+          setAuthChecked(true);
           return;
         }
         setAuthChecked(true);
       } catch {
         if (cancelled) return;
-        // Could not confirm a session — keep unsigned redirect strict.
-        router.replace("/auth");
+        setNeedsAuth(true);
+        setAuthChecked(true);
       }
     })();
     return () => {
@@ -103,7 +105,8 @@ export default function PostPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/auth");
+        setNeedsAuth(true);
+        setLoading(false);
         return;
       }
 
@@ -214,6 +217,37 @@ export default function PostPage() {
     return (
       <div className="wrap">
         <div className="panel empty">Checking sign-in…</div>
+      </div>
+    );
+  }
+
+  if (needsAuth) {
+    return (
+      <div className="wrap">
+        <div
+          className="panel"
+          style={{ maxWidth: 440, margin: "0 auto", textAlign: "center" }}
+        >
+          <h2 style={{ marginTop: 0 }}>Sign in to post leftovers</h2>
+          <p className="help">
+            Create a free account or sign in. We&apos;ll bring you right back to
+            this form.
+          </p>
+          <div className="actions" style={{ justifyContent: "center" }}>
+            <Link
+              href="/auth?next=%2Fpost&reason=post"
+              className="primary"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/auth?mode=signup&next=%2Fpost&reason=post"
+              className="ghost"
+            >
+              Create account
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

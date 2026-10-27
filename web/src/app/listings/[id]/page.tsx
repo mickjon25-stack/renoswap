@@ -165,10 +165,41 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               <h3 style={{ marginTop: 0 }}>Report</h3>
               <ReportForm listingId={listing.id} reportedUserId={listing.poster_id} />
             </div>
+          ) : listing.status === "Approved" ? (
+            <div className="panel">
+              <h3 style={{ marginTop: 0 }}>Make an offer</h3>
+              <p className="help" style={{ marginTop: 0 }}>
+                Sign in to make an offer or message the poster. After you sign
+                in, you&apos;ll come back to this listing.
+              </p>
+              <div className="actions">
+                <Link
+                  href={`/auth?next=${encodeURIComponent(`/listings/${listing.id}`)}&reason=offer`}
+                  className="primary"
+                >
+                  Sign in to make an offer
+                </Link>
+                <Link
+                  href={`/auth?mode=signup&next=${encodeURIComponent(`/listings/${listing.id}`)}&reason=offer`}
+                  className="ghost"
+                >
+                  Create account
+                </Link>
+              </div>
+              <p className="help" style={{ marginBottom: 0, marginTop: 12 }}>
+                Need to report this listing? Sign in first — reporting is available
+                from this page after you&apos;re signed in.
+              </p>
+            </div>
           ) : (
             <div className="panel">
-              <p className="help">
-                <Link href="/auth">Sign in</Link> to message or report.
+              <p className="help" style={{ marginBottom: 0 }}>
+                <Link
+                  href={`/auth?next=${encodeURIComponent(`/listings/${listing.id}`)}`}
+                >
+                  Sign in
+                </Link>{" "}
+                to report this listing.
               </p>
             </div>
           )}
