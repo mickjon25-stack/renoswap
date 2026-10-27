@@ -153,8 +153,8 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <div className="panel">
               <h3 style={{ marginTop: 0 }}>Make an offer / message</h3>
               <p className="help" style={{ marginTop: 0 }}>
-                Sends an offer and opens a thread in your{" "}
-                <Link href="/inbox">Inbox</Link>.
+                Sends an offer, emails the poster (if alerts are on), and opens a
+                thread in your <Link href="/inbox">Inbox</Link>.
               </p>
               <OfferForm listingId={listing.id} allowSwap={listing.intent !== "Sell"} />
             </div>

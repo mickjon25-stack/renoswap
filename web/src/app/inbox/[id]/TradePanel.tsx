@@ -66,7 +66,7 @@ export function TradePanel({
     body = (
       <>
         <p className="help" style={{ marginTop: 0 }}>
-          Finished the swap or sale? Tap below. {otherName} will get a chance to
+          Finished the swap or sale? Tap below. We&apos;ll email {otherName} to
           confirm in this chat — <strong>after they confirm, you can rate them
           here</strong> (1–5 stars). You rate the person, not the listing.
         </p>
@@ -77,11 +77,11 @@ export function TradePanel({
           onClick={() =>
             run("mark", async () => {
               const res = await supabase.rpc("request_trade_complete", { p_thread_id: threadId });
-              if (!res.error) {
-                await fetch("/api/notify/message", {
+              if (!res.error && res.data) {
+                await fetch("/api/notify/trade", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ threadId }),
+                  body: JSON.stringify({ tradeId: res.data, event: "requested" }),
                 }).catch(() => {});
               }
               return res;
@@ -98,8 +98,8 @@ export function TradePanel({
       <>
         <p className="help" style={{ marginTop: 0 }}>
           Waiting for <strong>{otherName}</strong> to tap &quot;Yes, confirm
-          trade&quot; in their Inbox. Reviews unlock only after they confirm.
-          Ask them to open this conversation and confirm.
+          trade&quot; in their Inbox (we emailed them). Reviews unlock only
+          after they confirm.
         </p>
         <button
           className="ghost"
@@ -128,9 +128,20 @@ export function TradePanel({
             type="button"
             disabled={busy}
             onClick={() =>
-              run("confirm", () =>
-                supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: true })
-              )
+              run("confirm", async () => {
+                const res = await supabase.rpc("respond_trade_complete", {
+                  p_trade_id: trade.id,
+                  p_accept: true,
+                });
+                if (!res.error) {
+                  await fetch("/api/notify/trade", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ tradeId: trade.id, event: "confirmed" }),
+                  }).catch(() => {});
+                }
+                return res;
+              })
             }
             aria-busy={busyAction === "confirm"}
           >

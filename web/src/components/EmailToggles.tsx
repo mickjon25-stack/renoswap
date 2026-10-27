@@ -51,7 +51,7 @@ export function EmailToggles() {
       {error ? <div className="err">{error}</div> : null}
       <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input type="checkbox" checked={prefs.message_alerts} onChange={() => toggle("message_alerts")} />
-        Email me about new offers and messages
+        Email me about new offers, messages, and trade updates
       </label>
       <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input type="checkbox" checked={prefs.looking_for_alerts} onChange={() => toggle("looking_for_alerts")} />
