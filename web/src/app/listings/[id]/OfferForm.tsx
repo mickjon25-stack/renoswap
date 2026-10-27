@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -49,9 +49,11 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (submittingRef.current || loading) return;
     setError(null);
     setThreadId(null);
     const trimmed = message.trim();
@@ -59,6 +61,7 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
       setError("Write a message first.");
       return;
     }
+    submittingRef.current = true;
     setLoading(true);
     try {
       const supabase = createClient();
@@ -153,6 +156,7 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send offer");
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   }
@@ -184,7 +188,7 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
                 return (
                   <li key={m.id}>
                     <label className={`pick-item ${on ? "on" : ""}`}>
-                      <input type="checkbox" checked={on} onChange={() => toggle(m.id)} />
+                      <input type="checkbox" checked={on} disabled={loading} onChange={() => toggle(m.id)} />
                       {m.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.photo} alt="" className="linked-thumb" />
@@ -206,12 +210,13 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
           id="offer-msg"
           rows={4}
           required
+          disabled={loading}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="I'd swap my leftover tile for this…"
         />
       </div>
-      <button className="primary cta" type="submit" disabled={loading}>
+      <button className="primary cta" type="submit" disabled={loading} aria-busy={loading}>
         {loading ? "Sending…" : picked.length ? `Send swap offer (${picked.length})` : "Send offer"}
       </button>
     </form>

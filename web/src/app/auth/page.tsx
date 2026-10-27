@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -49,6 +49,7 @@ function AuthForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const [done, setDone] = useState<Done>(null);
   const [showResend, setShowResend] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -102,6 +103,7 @@ function AuthForm() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submittingRef.current || loading) return;
     setError(null);
     setNotice(null);
     setShowResend(false);
@@ -122,6 +124,7 @@ function AuthForm() {
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     try {
       const supabase = createClient();
@@ -213,6 +216,7 @@ function AuthForm() {
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   }
@@ -303,6 +307,7 @@ function AuthForm() {
             role="tab"
             aria-selected={mode === "signin"}
             className={mode === "signin" ? "active" : undefined}
+            disabled={loading}
             onClick={() => switchMode("signin")}
           >
             I have an account
@@ -312,6 +317,7 @@ function AuthForm() {
             role="tab"
             aria-selected={mode === "signup"}
             className={mode === "signup" ? "active" : undefined}
+            disabled={loading}
             onClick={() => switchMode("signup")}
           >
             I&apos;m new here
@@ -408,6 +414,7 @@ function AuthForm() {
           className="primary auth-submit"
           type="submit"
           disabled={loading || !configured || (mode === "signup" && !agreed)}
+          aria-busy={loading}
         >
           {submitLabel}
         </button>
@@ -418,6 +425,7 @@ function AuthForm() {
             type="button"
             className="link-btn"
             style={{ fontWeight: 700, textDecoration: "underline", fontSize: 15 }}
+            disabled={loading}
             onClick={() => switchMode("reset")}
           >
             Forgot password?

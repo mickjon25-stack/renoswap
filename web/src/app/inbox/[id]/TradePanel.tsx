@@ -28,10 +28,18 @@ export function TradePanel({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<
+    "mark" | "cancel" | "confirm" | "decline" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(fn: () => PromiseLike<{ data?: unknown; error: { message: string } | null }>) {
+  async function run(
+    action: "mark" | "cancel" | "confirm" | "decline",
+    fn: () => PromiseLike<{ data?: unknown; error: { message: string } | null }>
+  ) {
+    if (busy) return;
     setBusy(true);
+    setBusyAction(action);
     setError(null);
     try {
       const { error: err } = await fn();
@@ -46,6 +54,7 @@ export function TradePanel({
       );
     } finally {
       setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -66,7 +75,7 @@ export function TradePanel({
           type="button"
           disabled={busy}
           onClick={() =>
-            run(async () => {
+            run("mark", async () => {
               const res = await supabase.rpc("request_trade_complete", { p_thread_id: threadId });
               if (!res.error) {
                 await fetch("/api/notify/message", {
@@ -78,8 +87,9 @@ export function TradePanel({
               return res;
             })
           }
+          aria-busy={busyAction === "mark"}
         >
-          Mark trade complete
+          {busyAction === "mark" ? "Marking…" : "Mark trade complete"}
         </button>
       </>
     );
@@ -95,9 +105,14 @@ export function TradePanel({
           className="ghost"
           type="button"
           disabled={busy}
-          onClick={() => run(() => supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: false }))}
+          onClick={() =>
+            run("cancel", () =>
+              supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: false })
+            )
+          }
+          aria-busy={busyAction === "cancel"}
         >
-          Cancel request
+          {busyAction === "cancel" ? "Cancelling…" : "Cancel request"}
         </button>
       </>
     );
@@ -112,17 +127,27 @@ export function TradePanel({
             className="primary"
             type="button"
             disabled={busy}
-            onClick={() => run(() => supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: true }))}
+            onClick={() =>
+              run("confirm", () =>
+                supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: true })
+              )
+            }
+            aria-busy={busyAction === "confirm"}
           >
-            Yes, confirm trade
+            {busyAction === "confirm" ? "Confirming…" : "Yes, confirm trade"}
           </button>
           <button
             className="ghost"
             type="button"
             disabled={busy}
-            onClick={() => run(() => supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: false }))}
+            onClick={() =>
+              run("decline", () =>
+                supabase.rpc("respond_trade_complete", { p_trade_id: trade.id, p_accept: false })
+              )
+            }
+            aria-busy={busyAction === "decline"}
           >
-            Not yet
+            {busyAction === "decline" ? "Updating…" : "Not yet"}
           </button>
         </div>
       </>
