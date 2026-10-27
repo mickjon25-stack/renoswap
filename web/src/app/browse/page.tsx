@@ -176,6 +176,33 @@ export default async function BrowsePage({
         </svg>
       </section>
 
+      <section className="how-it-works" aria-labelledby="how-heading">
+        <div className="how-it-works-head">
+          <h3 id="how-heading">How it works</h3>
+          <Link href="/post" className="primary how-post">
+            Post leftovers
+          </Link>
+        </div>
+        <ul className="how-list">
+          <li>
+            <span className="badge swap">Swap</span>
+            <span>Trade leftovers for something you need — no cash.</span>
+          </li>
+          <li>
+            <span className="badge sell">Sell</span>
+            <span>Set a price; they pay you off-app (Venmo, cash, etc.).</span>
+          </li>
+          <li>
+            <span className="badge sellswap">Sell or Swap</span>
+            <span>Either works — cash or a trade for your leftovers.</span>
+          </li>
+          <li>
+            <span className="badge free">Fast &amp; Free</span>
+            <span>Give it away fast; the free clock starts when we approve it.</span>
+          </li>
+        </ul>
+      </section>
+
       <form className="filters" method="get" role="search" id="listings">
         <div className="search-field">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
