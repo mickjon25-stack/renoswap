@@ -53,9 +53,8 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (submittingRef.current || loading) return;
+    if (submittingRef.current || loading || threadId) return;
     setError(null);
-    setThreadId(null);
     const trimmed = message.trim();
     if (!trimmed) {
       setError("Write a message first.");
@@ -148,11 +147,11 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
         body: JSON.stringify({ threadId: openThreadId }),
       }).catch(() => {});
 
+      // Clear so a second accidental send is hard; stay put so the confirmation stays visible.
       setMessage("");
       setPicked([]);
       setThreadId(openThreadId);
       router.refresh();
-      router.push(`/inbox/${openThreadId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send offer");
     } finally {
@@ -188,7 +187,7 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
                 return (
                   <li key={m.id}>
                     <label className={`pick-item ${on ? "on" : ""}`}>
-                      <input type="checkbox" checked={on} disabled={loading} onChange={() => toggle(m.id)} />
+                      <input type="checkbox" checked={on} disabled={loading || !!threadId} onChange={() => toggle(m.id)} />
                       {m.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.photo} alt="" className="linked-thumb" />
@@ -210,14 +209,20 @@ export function OfferForm({ listingId, allowSwap = true }: { listingId: string; 
           id="offer-msg"
           rows={4}
           required
-          disabled={loading}
+          disabled={loading || !!threadId}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="I'd swap my leftover tile for this…"
         />
       </div>
-      <button className="primary cta" type="submit" disabled={loading} aria-busy={loading}>
-        {loading ? "Sending…" : picked.length ? `Send swap offer (${picked.length})` : "Send offer"}
+      <button className="primary cta" type="submit" disabled={loading || !!threadId} aria-busy={loading}>
+        {loading
+          ? "Sending…"
+          : threadId
+            ? "Offer sent"
+            : picked.length
+              ? `Send swap offer (${picked.length})`
+              : "Send offer"}
       </button>
     </form>
   );
