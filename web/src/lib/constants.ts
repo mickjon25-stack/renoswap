@@ -37,6 +37,7 @@ export const LISTING_STATUSES = [
   "Claimed",
   "Rejected",
   "Expired",
+  "Deleted",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

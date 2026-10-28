@@ -542,6 +542,7 @@ input[type="file"]::file-selector-button {
 .status-chip.claimed { background: var(--brown); color: #fff; }
 .status-chip.pending-review { background: var(--gold-soft); color: #8a5a12; }
 .status-chip.expired { background: #ebe5db; color: var(--muted); }
+.status-chip.deleted { background: #ebe5db; color: var(--muted); }
 
 /* ==========================================================================
    Listing detail

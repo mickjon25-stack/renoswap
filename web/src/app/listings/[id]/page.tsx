@@ -8,6 +8,7 @@ import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
 import { ReportForm } from "./ReportForm";
 import { BumpButton } from "@/components/BumpButton";
+import { DeleteListingButton } from "@/components/DeleteListingButton";
 import { Avatar } from "@/components/Avatar";
 import { isRecentlyBumped } from "@/lib/billing";
 import { intentClass } from "@/components/ListingCard";
@@ -113,16 +114,33 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         <div className="stack">
           {user && user.id === listing.poster_id ? (
             <div className="panel">
-              <h3 style={{ marginTop: 0 }}>Boost this listing</h3>
-              <p className="help" style={{ marginTop: 0 }}>
-                {isRecentlyBumped(listing.bumped_at)
-                  ? "Currently boosted on Browse (within 7 days)."
-                  : "Pay once to sort this listing first on Browse for 7 days."}
-              </p>
-              <BumpButton
-                listingId={listing.id}
-                bumpedAt={listing.bumped_at}
-              />
+              {listing.status === "Deleted" ? (
+                <>
+                  <h3 style={{ marginTop: 0 }}>Deleted</h3>
+                  <p className="help" style={{ marginTop: 0 }}>
+                    This listing is removed from Browse. It stays in My listings for your records.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 style={{ marginTop: 0 }}>Manage listing</h3>
+                  <p className="help" style={{ marginTop: 0 }}>
+                    {isRecentlyBumped(listing.bumped_at)
+                      ? "Currently boosted on Browse (within 7 days)."
+                      : "Boost sorts this listing first on Browse for 7 days."}
+                  </p>
+                  <div className="actions" style={{ marginBottom: 12 }}>
+                    <BumpButton
+                      listingId={listing.id}
+                      bumpedAt={listing.bumped_at}
+                    />
+                  </div>
+                  <p className="help">
+                    Delete removes it from Browse right away. Open offers are closed.
+                  </p>
+                  <DeleteListingButton listingId={listing.id} title={listing.title} />
+                </>
+              )}
             </div>
           ) : null}
 

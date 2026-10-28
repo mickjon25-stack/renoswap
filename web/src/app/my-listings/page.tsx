@@ -7,6 +7,7 @@ import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import { primaryPhotoUrl, statusChipClass } from "@/lib/listing-ui";
 import type { Listing } from "@/lib/types";
 import { BumpButton } from "@/components/BumpButton";
+import { DeleteListingButton } from "@/components/DeleteListingButton";
 import {
   FREE_LISTING_CAP,
   isRecentlyBumped,
@@ -77,6 +78,7 @@ export default async function MyListingsPage() {
                 <th>Intent</th>
                 <th>ZIP</th>
                 <th>Boost</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -104,6 +106,9 @@ export default async function MyListingsPage() {
                       {l.status === "Rejected" && l.reject_reason ? (
                         <div className="help">Rejected: {l.reject_reason}</div>
                       ) : null}
+                      {l.status === "Deleted" ? (
+                        <div className="help">Removed from Browse</div>
+                      ) : null}
                     </td>
                     <td>
                       <span className={`status-chip ${statusChipClass(l.status)}`}>
@@ -118,7 +123,18 @@ export default async function MyListingsPage() {
                       ) : null}
                     </td>
                     <td>
-                      <BumpButton listingId={l.id} bumpedAt={l.bumped_at} />
+                      {l.status === "Deleted" ? (
+                        <span className="help">—</span>
+                      ) : (
+                        <BumpButton listingId={l.id} bumpedAt={l.bumped_at} />
+                      )}
+                    </td>
+                    <td>
+                      {l.status === "Deleted" ? (
+                        <span className="help">Deleted</span>
+                      ) : (
+                        <DeleteListingButton listingId={l.id} title={l.title} compact />
+                      )}
                     </td>
                   </tr>
                 );
