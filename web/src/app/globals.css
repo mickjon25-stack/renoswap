@@ -438,6 +438,25 @@ input[type="file"]::file-selector-button {
 .ok { background: var(--green-soft); border-color: #c4e2cf; color: #1f5537; }
 .err { background: var(--danger-soft); border-color: #efc7c3; color: var(--danger); }
 
+.avatar-nudge {
+  display: flex; align-items: flex-start; gap: 12px; justify-content: space-between;
+  background: var(--teal-soft); border: 1px solid #b9e0e4; color: #0f4f55;
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: var(--s-3);
+  font-family: var(--font-ui); font-size: 14px; line-height: 1.45;
+}
+.avatar-nudge-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.avatar-nudge-text strong { font-weight: 800; }
+.avatar-nudge-link {
+  display: inline-block; margin-top: 4px; font-weight: 700; color: var(--teal);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.avatar-nudge-dismiss {
+  flex-shrink: 0; border: 0; background: transparent; color: #0f4f55; opacity: 0.75;
+  font: inherit; font-weight: 700; cursor: pointer; padding: 2px 4px; white-space: nowrap;
+}
+.avatar-nudge-dismiss:hover { opacity: 1; text-decoration: underline; }
+
+
 /* ==========================================================================
    Listing cards
    ========================================================================== */

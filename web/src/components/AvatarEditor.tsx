@@ -90,7 +90,7 @@ export function AvatarEditor({
   }
 
   return (
-    <div className="avatar-editor">
+    <div className="avatar-editor" id="avatar-editor">
       <Avatar url={url} name={name} size="lg" />
       <div className="avatar-editor-body">
         <div className="actions" style={{ marginTop: 0 }}>

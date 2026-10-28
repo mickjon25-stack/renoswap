@@ -5,6 +5,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { TabBar } from "@/components/TabBar";
 import { ConfigBanner } from "@/components/ConfigBanner";
+import { AvatarNudgeBanner } from "@/components/AvatarNudgeBanner";
 import { AuthHashHandler } from "@/components/AuthHashHandler";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
@@ -65,6 +66,7 @@ export default async function RootLayout({
         <div className="app-shell">
           <Nav profile={profile} />
           <ConfigBanner />
+          <AvatarNudgeBanner missingAvatar={!!profile && !profile.avatar_url} />
           <AuthHashHandler />
           <main className="app-main">{children}</main>
           <footer className="site-footer">
