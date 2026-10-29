@@ -152,14 +152,14 @@ export default async function BrowsePage({
     <div className="wrap">
       <section className="hero welcome">
         <div className="hero-copy">
-          <h2>Leftover reno materials, still useful.</h2>
+          <h2>Your leftover reno materials have a next job.</h2>
           <p>
-            Swap or sell leftover tile, lumber, paint and more with neighbors.
-            Soft launch — open to early testers across the U.S.
+            Sell or swap extra tile, lumber, pavers, paint and more with people nearby.
+            Fresh camera photos, every listing reviewed. Launching in Texas — open to any U.S. ZIP.
           </p>
           <div className="hero-actions">
             <a href="#listings" className="btn btn-lg hero-btn">
-              Find materials near you
+              Browse materials near you
             </a>
           </div>
           <ul className="hero-intents" aria-label="Ways to trade">
@@ -180,25 +180,25 @@ export default async function BrowsePage({
         <div className="how-it-works-head">
           <h3 id="how-heading">How it works</h3>
           <Link href="/post" className="primary how-post">
-            Post leftovers
+            Post your leftovers
           </Link>
         </div>
         <ul className="how-list">
           <li>
             <span className="badge swap">Swap</span>
-            <span>Trade leftovers for something you need — no cash.</span>
+            <span>Trade what you have for what you need. No cash required.</span>
           </li>
           <li>
             <span className="badge sell">Sell</span>
-            <span>Set a price; they pay you off-app (Venmo, cash, etc.).</span>
+            <span>Name your price. Buyers pay you directly — cash, Venmo, your call.</span>
           </li>
           <li>
             <span className="badge sellswap">Sell or Swap</span>
-            <span>Either works — cash or a trade for your leftovers.</span>
+            <span>Open to both. Take cash or a good trade.</span>
           </li>
           <li>
             <span className="badge free">Fast &amp; Free</span>
-            <span>Give it away fast; the free clock starts when we approve it.</span>
+            <span>Give it away fast. Your listing goes live once it’s approved.</span>
           </li>
         </ul>
       </section>
@@ -285,9 +285,9 @@ export default async function BrowsePage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-64.png" alt="" width={48} height={48} />
           </div>
-          <p>{radius || category || intent || q ? "Nothing matches these filters yet. Try a wider distance or fewer filters." : "No approved listings yet. Be the first to post."}</p>
+          <p>{radius || category || intent || q ? "Nothing matches these filters yet. Try a wider distance or fewer filters." : "No listings here yet. Be the first to post your leftovers."}</p>
           <Link href="/post" className="primary cta">
-            Post leftovers
+            Post your leftovers
           </Link>
         </div>
       ) : (
