@@ -956,3 +956,14 @@ body { line-height: 1.55; }
 .swap-link { color: var(--neon-link); font-weight: 800; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; background: rgba(43,255,136,.22); padding: 1px 4px; border-radius: 4px; }
 .swap-link:active { background: var(--neon); color: var(--neon-ink); }
 .message-bubble.mine .swap-link { color: var(--neon-ink); background: var(--neon); }
+
+/* Delete conversation ("delete for me") */
+.inbox-row-actions { display: flex; justify-content: flex-end; padding: 0 12px 8px; margin-top: -6px; }
+.delete-thread-btn.compact { min-height: 40px; padding: 6px 14px; font-size: 14px; color: var(--muted, #666); }
+.delete-thread-footer { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.delete-thread-footer .help { margin: 0; }
+.delete-thread-footer .delete-thread-btn { min-height: 44px; }
+@media (max-width: 560px) {
+  .delete-thread-footer { flex-direction: column; align-items: stretch; }
+  .delete-thread-footer .delete-thread-btn { width: 100%; }
+}

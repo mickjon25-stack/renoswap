@@ -7,6 +7,7 @@ import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { formatWhen } from "@/lib/datetime";
 import type { Message, Profile } from "@/lib/types";
 import { ReplyForm } from "./ReplyForm";
+import { DeleteThreadButton } from "../DeleteThreadButton";
 import { TradePanel, type TradeInfo } from "./TradePanel";
 import { RatingBadge } from "@/components/RatingBadge";
 import { fetchRatings } from "@/lib/ratings";
@@ -156,7 +157,17 @@ export default async function ThreadPage({ params }: { params: Params }) {
     Profile,
     "id" | "display_name" | "avatar_url" | "city"
   > | null;
-  const msgs = (messages as Message[] | null) || [];
+  const { data: hide } = await supabase
+    .from("thread_hides")
+    .select("hidden_at")
+    .eq("user_id", user.id)
+    .eq("thread_id", id)
+    .maybeSingle();
+  const hiddenAt = (hide as { hidden_at: string } | null)?.hidden_at;
+  // After "delete for me", only show messages sent since then.
+  const msgs = ((messages as Message[] | null) || []).filter(
+    (m) => !hiddenAt || new Date(m.created_at) > new Date(hiddenAt)
+  );
   const listing = thread.listings;
   const offer = thread.offers;
 
@@ -249,6 +260,11 @@ export default async function ThreadPage({ params }: { params: Params }) {
           myReview={myReview}
         />
       ) : null}
+
+      <div className="delete-thread-footer">
+        <DeleteThreadButton threadId={thread.id} redirectTo="/inbox" />
+        <p className="help">Removes it from your inbox only. The other person still sees it.</p>
+      </div>
 
       <div className="warn" style={{ marginTop: 12 }}>
         Stay safe — meet in public for pickups. RenoSwap never holds materials

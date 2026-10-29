@@ -7,6 +7,7 @@ import { formatWhen } from "@/lib/datetime";
 import type { Message, Profile } from "@/lib/types";
 import { LinkedListings } from "@/components/LinkedListings";
 import { loadLinkedListings, offeredListingIds } from "@/lib/offer-listings";
+import { DeleteThreadButton } from "./DeleteThreadButton";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,14 @@ export default async function InboxPage() {
     )
     .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
     .order("updated_at", { ascending: false });
+
+  const { data: hideRows } = await supabase
+    .from("thread_hides")
+    .select("thread_id, hidden_at")
+    .eq("user_id", user.id);
+  const hiddenAt = new Map(
+    ((hideRows as { thread_id: string; hidden_at: string }[] | null) || []).map((h) => [h.thread_id, h.hidden_at])
+  );
 
   const threads = ((threadRows as unknown as ThreadRow[] | null) || []).map((t) => ({
     ...t,
@@ -121,6 +130,11 @@ export default async function InboxPage() {
       const sortAt = last?.created_at || t.updated_at || t.created_at;
       return { thread: t, otherId, last, sortAt };
     })
+    // Hidden ("deleted for me") threads come back only when a newer message arrives.
+    .filter(({ thread, last }) => {
+      const h = hiddenAt.get(thread.id);
+      return !h || (!!last && new Date(last.created_at) > new Date(h));
+    })
     .sort((a, b) => (a.sortAt < b.sortAt ? 1 : a.sortAt > b.sortAt ? -1 : 0));
 
   return (
@@ -168,6 +182,9 @@ export default async function InboxPage() {
                       </div>
                     </div>
                   </Link>
+                  <div className="inbox-row-actions">
+                    <DeleteThreadButton threadId={thread.id} compact />
+                  </div>
                   {offeredByThread.has(thread.id) ? (
                     <div style={{ padding: "0 16px 12px" }}>
                       <LinkedListings
