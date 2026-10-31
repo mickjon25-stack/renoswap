@@ -130,6 +130,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                       : "Boost sorts this listing first on Browse for 7 days."}
                   </p>
                   <div className="actions" style={{ marginBottom: 12 }}>
+                    <Link href={`/listings/${listing.id}/edit`} className="primary">
+                      Edit post
+                    </Link>
                     <BumpButton
                       listingId={listing.id}
                       bumpedAt={listing.bumped_at}

@@ -133,7 +133,12 @@ export default async function MyListingsPage() {
                       {l.status === "Deleted" ? (
                         <span className="help">Deleted</span>
                       ) : (
-                        <DeleteListingButton listingId={l.id} title={l.title} compact />
+                        <div className="owner-actions">
+                          <Link href={`/listings/${l.id}/edit`} className="ghost">
+                            Edit
+                          </Link>
+                          <DeleteListingButton listingId={l.id} title={l.title} compact />
+                        </div>
                       )}
                     </td>
                   </tr>

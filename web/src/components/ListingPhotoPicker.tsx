@@ -10,6 +10,8 @@ type Props = {
   files: File[];
   onChange: (files: File[]) => void;
   disabled?: boolean;
+  /** Max new photos this picker may add (edit form passes 6 minus existing). */
+  max?: number;
 };
 
 /**
@@ -21,7 +23,7 @@ type Props = {
  * metadata is stripped, before it is accepted for upload.
  * Profile photos use AvatarEditor and are NOT affected by any of this.
  */
-export default function ListingPhotoPicker({ files, onChange, disabled }: Props) {
+export default function ListingPhotoPicker({ files, onChange, disabled, max = MAX_LISTING_PHOTOS }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -40,7 +42,7 @@ export default function ListingPhotoPicker({ files, onChange, disabled }: Props)
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
-  const remaining = MAX_LISTING_PHOTOS - files.length;
+  const remaining = max - files.length;
   const busy = disabled || checking;
 
   async function onPick(list: FileList | null) {
@@ -78,7 +80,7 @@ export default function ListingPhotoPicker({ files, onChange, disabled }: Props)
           `${stale} of those photos look like they were taken earlier. Please take new photos of the item now.`
         );
       if (notImage) msgs.push("Only photos can be added.");
-      if (tooMany) msgs.push(`You can add up to ${MAX_LISTING_PHOTOS} photos.`);
+      if (tooMany) msgs.push(`You can add up to ${max} photos.`);
       setProblem(msgs.length ? msgs.join(" ") : null);
     } finally {
       setChecking(false);
@@ -149,7 +151,7 @@ export default function ListingPhotoPicker({ files, onChange, disabled }: Props)
       </div>
       <p className="help">
         Take photos of the actual item now. Library photos aren&apos;t allowed. Location data
-        is removed from photos before upload. {files.length}/{MAX_LISTING_PHOTOS} added · 3+
+        is removed from photos before upload. {files.length}/{max} added · 3+
         clear shots work best.
       </p>
       {isDesktop ? (
