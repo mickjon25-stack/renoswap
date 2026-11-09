@@ -1,19 +1,19 @@
 /* RenoSwap — Texas-first reno materials marketplace (browser-only demo) */
 const CATEGORIES = [
-  "Lumber & sheet goods",
-  "Drywall & insulation",
-  "Roofing",
-  "Flooring, tile & stone",
-  "Paint & adhesives",
-  "Doors, windows & trim",
-  "Kitchen & bath",
   "Cabinets & counters",
-  "Electrical & lighting",
-  "Plumbing",
-  "Tools",
   "Deck, fence & outdoor",
+  "Doors, windows & trim",
   "Driveways & hardscape",
-  "Landscaping"
+  "Drywall & insulation",
+  "Electrical & lighting",
+  "Flooring, tile & stone",
+  "Kitchen & bath",
+  "Landscaping",
+  "Lumber & sheet goods",
+  "Paint & adhesives",
+  "Plumbing",
+  "Roofing",
+  "Tools & equipment",
 ];
 
 const CONDITIONS = [
@@ -104,7 +104,7 @@ const SEED = [
   {
     id: "l4",
     title: "Framing nailer + two fuel packs",
-    category: "Tools",
+    category: "Tools & equipment",
     intent: "Sell",
     condition: "Good",
     description: "Paslode-style framing nailer. Fires well. Cosmetic scuffs only.",

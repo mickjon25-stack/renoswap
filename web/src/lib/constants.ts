@@ -1,26 +1,27 @@
 export const CATEGORIES = [
-  "Lumber & sheet goods",
-  "Drywall & insulation",
-  "Roofing",
-  "Flooring, tile & stone",
-  "Paint & adhesives",
-  "Doors, windows & trim",
-  "Kitchen & bath",
   "Cabinets & counters",
-  "Electrical & lighting",
-  "Plumbing",
-  "Tools",
   "Deck, fence & outdoor",
+  "Doors, windows & trim",
   "Driveways & hardscape",
+  "Drywall & insulation",
+  "Electrical & lighting",
+  "Flooring, tile & stone",
+  "Kitchen & bath",
   "Landscaping",
+  "Lumber & sheet goods",
+  "Paint & adhesives",
+  "Plumbing",
+  "Roofing",
+  "Tools & equipment",
 ] as const;
 
 /** Short examples shown under the category picker on Post / Edit. */
 export const CATEGORY_HINTS: Partial<Record<(typeof CATEGORIES)[number], string>> = {
   "Driveways & hardscape": "Pavers, concrete, gravel, limestone, edging, forms.",
-  Tools: "Saws, tile cutters, ladders, power and hand tools.",
+  "Tools & equipment":
+    "Saws, tile cutters, ladders, power and hand tools, lawnmowers and yard equipment. A lawnmower can go under Tools & equipment or Landscaping.",
   Landscaping:
-    "Sod, mulch, plants, planter beds (raised beds), planting pots, landscape rock, soil, irrigation parts.",
+    "Sod, mulch, plants, planter beds (raised beds), planting pots, landscape rock, soil, irrigation parts, lawnmowers. A lawnmower can go under Landscaping or Tools & equipment.",
 };
 
 export const CONDITIONS = [
