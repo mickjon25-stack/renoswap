@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
-import { CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
+import { CATEGORIES, CATEGORY_HINTS, CONDITIONS, INTENTS } from "@/lib/constants";
 import { usZipError } from "@/lib/us-zip";
 import { LISTING_PHOTO_BUCKET } from "@/lib/listing-photos";
 import ListingPhotoPicker, { MAX_LISTING_PHOTOS } from "@/components/ListingPhotoPicker";
@@ -248,6 +248,9 @@ export default function EditListingPage() {
               <select id="category" value={form.category} onChange={(e) => set("category", e.target.value)}>
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
+              {CATEGORY_HINTS[form.category as (typeof CATEGORIES)[number]] ? (
+                <p className="help">{CATEGORY_HINTS[form.category as (typeof CATEGORIES)[number]]}</p>
+              ) : null}
             </div>
             <div className="field">
               <label htmlFor="intent">Intent</label>

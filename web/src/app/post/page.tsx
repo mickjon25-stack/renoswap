@@ -10,7 +10,7 @@ import {
   hasSupabaseConfig,
   MISSING_SUPABASE_ENV_MESSAGE,
 } from "@/lib/supabase/env";
-import { ACTIVE_STATUSES, CATEGORIES, CONDITIONS, INTENTS } from "@/lib/constants";
+import { ACTIVE_STATUSES, CATEGORIES, CATEGORY_HINTS, CONDITIONS, INTENTS } from "@/lib/constants";
 import { usZipError } from "@/lib/us-zip";
 import { FREE_LISTING_CAP, listingCapForPlan } from "@/lib/billing";
 import ListingPhotoPicker, { MAX_LISTING_PHOTOS } from "@/components/ListingPhotoPicker";
@@ -300,6 +300,9 @@ export default function PostPage() {
                 <option key={c}>{c}</option>
               ))}
             </select>
+            {CATEGORY_HINTS[form.category as (typeof CATEGORIES)[number]] ? (
+              <p className="help">{CATEGORY_HINTS[form.category as (typeof CATEGORIES)[number]]}</p>
+            ) : null}
           </div>
           <div className="field">
             <label htmlFor="intent">Intent</label>

@@ -15,6 +15,14 @@ export const CATEGORIES = [
   "Landscaping",
 ] as const;
 
+/** Short examples shown under the category picker on Post / Edit. */
+export const CATEGORY_HINTS: Partial<Record<(typeof CATEGORIES)[number], string>> = {
+  "Driveways & hardscape": "Pavers, concrete, gravel, limestone, edging, forms.",
+  Tools: "Saws, tile cutters, ladders, power and hand tools.",
+  Landscaping:
+    "Sod, mulch, plants, planter beds (raised beds), planting pots, landscape rock, soil, irrigation parts.",
+};
+
 export const CONDITIONS = [
   "New unused",
   "Open box",
