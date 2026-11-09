@@ -1,5 +1,6 @@
 /* RenoSwap — Texas-first reno materials marketplace (browser-only demo) */
 const CATEGORIES = [
+  "Appliances & HVAC",
   "Cabinets & counters",
   "Deck, fence & outdoor",
   "Doors, windows & trim",
@@ -14,6 +15,7 @@ const CATEGORIES = [
   "Plumbing",
   "Roofing",
   "Tools & equipment",
+  "Other",
 ];
 
 const CONDITIONS = [
