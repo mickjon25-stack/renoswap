@@ -10,9 +10,10 @@ const CATEGORIES = [
   "Cabinets & counters",
   "Electrical & lighting",
   "Plumbing",
-  "Tools & equipment",
+  "Tools",
   "Deck, fence & outdoor",
-  "Driveways & hardscape"
+  "Driveways & hardscape",
+  "Landscaping"
 ];
 
 const CONDITIONS = [
@@ -103,7 +104,7 @@ const SEED = [
   {
     id: "l4",
     title: "Framing nailer + two fuel packs",
-    category: "Tools & equipment",
+    category: "Tools",
     intent: "Sell",
     condition: "Good",
     description: "Paslode-style framing nailer. Fires well. Cosmetic scuffs only.",

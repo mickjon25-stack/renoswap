@@ -9,9 +9,10 @@ export const CATEGORIES = [
   "Cabinets & counters",
   "Electrical & lighting",
   "Plumbing",
-  "Tools & equipment",
+  "Tools",
   "Deck, fence & outdoor",
   "Driveways & hardscape",
+  "Landscaping",
 ] as const;
 
 export const CONDITIONS = [
