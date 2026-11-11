@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseConfig } from "@/lib/supabase/env";
 import { sortedPhotos, statusChipClass } from "@/lib/listing-ui";
+import { ListingPhotos } from "@/components/ListingPhotos";
 import { withSignedPhotoUrls } from "@/lib/listing-photos";
 import type { Listing } from "@/lib/types";
 import { OfferForm } from "./OfferForm";
@@ -59,22 +60,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
       </Link>
       <div className="detail-grid" style={{ marginTop: 12 }}>
         <div className="stack">
-          <div className={`photos${photos.length > 1 ? "" : " photos-single"}`}>
-            {photos[0]?.public_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[0].public_url} alt={listing.title} />
-            ) : (
-              <div className="thumb thumb-empty photo-placeholder" />
-            )}
-            <div className="stack">
-              {photos.slice(1, 3).map((p) =>
-                p.public_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={p.id} className="small" src={p.public_url} alt="" />
-                ) : null
-              )}
-            </div>
-          </div>
+          <ListingPhotos title={listing.title} photos={photos} />
           <div className="panel listing-main">
             <div className="listing-chips">
               <span className={`pill ${intentClass(listing.intent)}`}>{listing.intent}</span>
