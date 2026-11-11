@@ -185,15 +185,8 @@ export default function AccountPage() {
   return (
     <div className="wrap">
       <div className="panel form-panel" style={{ maxWidth: 560, margin: "0 auto" }}>
-        <div className="row">
-          <h2 style={{ margin: 0 }}>Account</h2>
-          <form action="/auth/signout" method="post">
-            <button className="ghost" type="submit">
-              Sign out
-            </button>
-          </form>
-        </div>
-        <p className="help">
+        <h2 className="account-title">Account</h2>
+        <p className="help account-lead">
           Photo, city, and U.S. ZIP — editable anytime. Profile is complete when
           display name, city, and ZIP are set.
         </p>
@@ -293,6 +286,11 @@ export default function AccountPage() {
           </Link>
         </div>
         <DeleteAccount />
+        <form action="/auth/signout" method="post" className="account-signout">
+          <button className="ghost account-signout-btn" type="submit">
+            Sign out
+          </button>
+        </form>
       </div>
     </div>
   );

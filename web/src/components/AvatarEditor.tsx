@@ -90,8 +90,9 @@ export function AvatarEditor({
   }
 
   return (
-    <div className="avatar-editor" id="avatar-editor">
+    <div className="avatar-editor avatar-editor-center" id="avatar-editor">
       <Avatar url={url} name={name} size="lg" />
+      {name.trim() ? <div className="avatar-editor-name">{name.trim()}</div> : null}
       <div className="avatar-editor-body">
         <div className="actions" style={{ marginTop: 0 }}>
           <label className={`btn primary file-btn${busy ? " disabled" : ""}`}>

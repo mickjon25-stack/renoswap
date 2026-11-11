@@ -29,7 +29,7 @@ export function DeleteAccount() {
   }
 
   return (
-    <div className="stack" style={{ marginTop: 32, borderTop: "1px solid #eee", paddingTop: 16 }}>
+    <div className="stack account-danger">
       <h3 style={{ marginBottom: 0 }}>Delete account</h3>
       {!open ? (
         <div>

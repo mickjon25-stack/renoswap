@@ -590,6 +590,31 @@ input[type="file"]::file-selector-button {
 .avatar.sm.avatar-initials, .avatar.xs.avatar-initials { font-size: 11px; }
 .avatar-editor { display: flex; gap: var(--s-4); align-items: center; margin: var(--s-2) 0 var(--s-5); flex-wrap: wrap; }
 .avatar-editor-body { flex: 1 1 200px; min-width: 0; }
+.avatar-editor-center {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+}
+.avatar-editor-center .avatar-editor-body { flex: 0 1 auto; width: 100%; }
+.avatar-editor-center .actions { justify-content: center; margin-top: var(--s-2); }
+.avatar-editor-name {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.account-title { margin: 0 0 var(--s-2); text-align: center; }
+.account-lead { text-align: center; }
+.account-danger {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.account-signout { margin-top: 20px; }
+.account-signout-btn { width: 100%; min-height: 48px; }
 .file-btn { position: relative; overflow: hidden; cursor: pointer; display: inline-flex; align-items: center; margin: 0; }
 .file-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; padding: 0; border: 0; }
 .file-btn.disabled { opacity: .45; pointer-events: none; }
