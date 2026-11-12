@@ -14,6 +14,7 @@ import { ACTIVE_STATUSES, CATEGORIES, CATEGORY_HINTS, CONDITIONS, INTENTS } from
 import { usZipError } from "@/lib/us-zip";
 import { FREE_LISTING_CAP, listingCapForPlan } from "@/lib/billing";
 import ListingPhotoPicker, { MAX_LISTING_PHOTOS } from "@/components/ListingPhotoPicker";
+import { AuthBrand } from "@/components/AuthBrand";
 
 export default function PostPage() {
   const router = useRouter();
@@ -224,30 +225,25 @@ export default function PostPage() {
   if (needsAuth) {
     return (
       <div className="wrap">
-        <div
-          className="panel"
-          style={{ maxWidth: 440, margin: "0 auto", textAlign: "center" }}
-        >
-          <h2 style={{ marginTop: 0 }}>Sign in to post leftovers</h2>
-          <p className="help">
-            Create a free account or sign in. We&apos;ll bring you right back to
-            this form.
-          </p>
-          <div className="actions" style={{ justifyContent: "center" }}>
-            <Link
-              href="/auth?next=%2Fpost&reason=post"
-              className="primary"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/auth?mode=signup&next=%2Fpost&reason=post"
-              className="ghost"
-            >
-              Create account
-            </Link>
+        <AuthBrand lead="Create a free account or sign in. We'll bring you right back to this form.">
+          <div className="panel auth-panel" style={{ textAlign: "center" }}>
+            <h2 style={{ marginTop: 0 }}>Sign in to post leftovers</h2>
+            <div className="actions" style={{ justifyContent: "center" }}>
+              <Link
+                href="/auth?next=%2Fpost&reason=post"
+                className="primary"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/auth?mode=signup&next=%2Fpost&reason=post"
+                className="ghost"
+              >
+                Create account
+              </Link>
+            </div>
           </div>
-        </div>
+        </AuthBrand>
       </div>
     );
   }

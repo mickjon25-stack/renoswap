@@ -10,6 +10,7 @@ import {
 import { friendlyAuthError } from "@/lib/auth-messages";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 import { authReasonNotice, safeAuthNext } from "@/lib/auth-next";
+import { AuthBrand } from "@/components/AuthBrand";
 
 type Mode = "signin" | "signup" | "reset";
 /** Screens shown instead of the form after an email was (or wasn't) sent. */
@@ -447,15 +448,17 @@ function AuthForm() {
 export default function AuthPage() {
   return (
     <div className="wrap">
-      <Suspense
-        fallback={
-          <div className="panel auth-panel">
-            <p className="muted">Loading…</p>
-          </div>
-        }
-      >
-        <AuthForm />
-      </Suspense>
+      <AuthBrand>
+        <Suspense
+          fallback={
+            <div className="panel auth-panel">
+              <p className="muted">Loading…</p>
+            </div>
+          }
+        >
+          <AuthForm />
+        </Suspense>
+      </AuthBrand>
     </div>
   );
 }

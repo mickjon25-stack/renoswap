@@ -16,10 +16,13 @@ export function ListingCard({
   listing,
   rating,
   milesAway,
+  priority = false,
 }: {
   listing: Listing;
   rating?: Rating | null;
   milesAway?: number;
+  /** Eager-load the photo (first cards in the Browse grid). */
+  priority?: boolean;
 }) {
   const photo = primaryPhotoUrl(listing.listing_photos);
   const boosted = isRecentlyBumped(listing.bumped_at);
@@ -35,10 +38,20 @@ export function ListingCard({
       href={`/listings/${listing.id}`}
       className={`card${listing.status === "Claimed" ? " is-claimed" : ""}${boosted ? " is-boosted" : ""}`}
     >
-      <div
-        className={`thumb${photo ? "" : " thumb-empty"}`}
-        style={photo ? { backgroundImage: `url(${photo})` } : undefined}
-      >
+      <div className={`thumb${photo ? "" : " thumb-empty"}`}>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="thumb-img"
+            src={photo}
+            alt=""
+            width={640}
+            height={640}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority ? "high" : "auto"}
+          />
+        ) : null}
         <div className="badges">
           <span className={`badge ${intentClass(listing.intent)}`}>
             {listing.intent}

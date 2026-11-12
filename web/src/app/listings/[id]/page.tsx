@@ -59,9 +59,10 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         ← Back to browse
       </Link>
       <div className="detail-grid" style={{ marginTop: 12 }}>
-        <div className="stack">
+        <div className="detail-photos">
           <ListingPhotos title={listing.title} photos={photos} />
-          <div className="panel listing-main">
+        </div>
+        <div className="panel listing-main">
             <div className="listing-chips">
               <span className={`pill ${intentClass(listing.intent)}`}>{listing.intent}</span>
               <span className={`status-chip ${statusChipClass(listing.status)}`}>
@@ -95,9 +96,8 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               {listing.dumpster_bound ? " · Dumpster-bound" : ""}
             </p>
           </div>
-        </div>
 
-        <div className="stack">
+        <div className="stack detail-side">
           {user && user.id === listing.poster_id ? (
             <div className="panel">
               {listing.status === "Deleted" ? (

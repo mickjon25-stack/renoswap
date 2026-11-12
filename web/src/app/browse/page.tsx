@@ -292,9 +292,13 @@ export default async function BrowsePage({
         </div>
       ) : (
         <div className="grid">
-          {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} rating={ratings[l.poster_id]}
+          {listings.map((l, i) => (
+            <ListingCard
+              key={l.id}
+              listing={l}
+              rating={ratings[l.poster_id]}
               milesAway={distances[l.id]}
+              priority={i < 4}
             />
           ))}
         </div>
