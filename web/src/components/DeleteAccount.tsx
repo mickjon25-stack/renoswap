@@ -30,9 +30,9 @@ export function DeleteAccount() {
 
   return (
     <div className="stack account-danger">
-      <h3 style={{ marginBottom: 0 }}>Delete account</h3>
+      <h3 style={{ marginBottom: 0, textAlign: "center" }}>Delete account</h3>
       {!open ? (
-        <div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <button type="button" className="danger" onClick={() => setOpen(true)}>
             Delete account
           </button>
