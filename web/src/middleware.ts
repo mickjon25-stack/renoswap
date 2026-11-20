@@ -15,8 +15,13 @@ export async function middleware(request: NextRequest) {
   const isPage =
     request.method === "GET" || request.method === "HEAD";
   // Leave API routes alone (e.g. Stripe webhooks don't follow redirects).
+  // Production deployment links (e.g. renoswap-abc123-reno-swap.vercel.app
+  // from the Vercel dashboard) also keep their own sign-in, so send them to
+  // renoswap.com too. Preview deployments are left alone.
+  const isProdVercelUrl =
+    process.env.VERCEL_ENV === "production" && host.endsWith(".vercel.app");
   if (
-    ALIAS_HOSTS.has(host) &&
+    (ALIAS_HOSTS.has(host) || isProdVercelUrl) &&
     isPage &&
     !request.nextUrl.pathname.startsWith("/api/")
   ) {
