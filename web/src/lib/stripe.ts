@@ -6,7 +6,7 @@ export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key || key.includes("your-stripe") || key.includes("placeholder")) {
     throw new Error(
-      "STRIPE_SECRET_KEY is not configured. Add it to web/.env.local (test mode sk_test_…)."
+      "STRIPE_SECRET_KEY is not configured. Add it to web/.env.local (sk_… or restricted rk_… key)."
     );
   }
   if (!stripeSingleton) {
@@ -24,7 +24,40 @@ export function hasStripeConfig(): boolean {
   if (!key || !pub) return false;
   if (key.includes("your-stripe") || key.includes("placeholder")) return false;
   if (pub.includes("your-stripe") || pub.includes("placeholder")) return false;
-  return key.startsWith("sk_") && pub.startsWith("pk_");
+  // Accept a standard (sk_) or restricted (rk_) secret key.
+  return (key.startsWith("sk_") || key.startsWith("rk_")) && pub.startsWith("pk_");
+}
+
+/**
+ * True when Stripe says the customer doesn't exist in this mode/account, e.g.
+ * a test-mode cus_ id stored before switching to live keys.
+ */
+export function isMissingCustomerError(e: unknown): boolean {
+  const err = e as { code?: string; raw?: { code?: string }; message?: string };
+  const code = err?.code || err?.raw?.code;
+  return (
+    code === "resource_missing" ||
+    /No such customer/i.test(err?.message || "")
+  );
+}
+
+/**
+ * Returns the stored customer id if it still exists in the current Stripe
+ * mode, or null if it's missing/deleted (so the caller can create a new one).
+ */
+export async function existingCustomerId(
+  stripe: Stripe,
+  customerId: string | null | undefined
+): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const c = await stripe.customers.retrieve(customerId);
+    if ((c as { deleted?: boolean }).deleted) return null;
+    return customerId;
+  } catch (e) {
+    if (isMissingCustomerError(e)) return null;
+    throw e;
+  }
 }
 
 /**

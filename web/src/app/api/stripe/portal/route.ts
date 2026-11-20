@@ -1,7 +1,12 @@
 import { getMyProfile } from "@/lib/supabase/my-profile";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { appBaseUrl, getStripe, hasStripeConfig } from "@/lib/stripe";
+import {
+  appBaseUrl,
+  existingCustomerId,
+  getStripe,
+  hasStripeConfig,
+} from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -24,17 +29,23 @@ export async function POST(req: Request) {
 
     const { data: profile } = await getMyProfile(supabase);
 
-    if (!profile?.stripe_customer_id) {
+    const stripe = getStripe();
+    // Ignore a stored id that doesn't exist in the current Stripe mode
+    // (e.g. a test-mode customer after switching to live keys).
+    const customerId = await existingCustomerId(
+      stripe,
+      profile?.stripe_customer_id as string | null | undefined
+    );
+    if (!customerId) {
       return NextResponse.json(
         { error: "No billing customer yet. Subscribe to a plan first." },
         { status: 400 }
       );
     }
 
-    const stripe = getStripe();
     const base = appBaseUrl(req);
     const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: customerId,
       return_url: `${base}/billing`,
     });
     return NextResponse.json({ url: session.url });

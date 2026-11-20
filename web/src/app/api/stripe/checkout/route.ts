@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   appBaseUrl,
   bumpPriceId,
+  existingCustomerId,
   getStripe,
   hasStripeConfig,
   priceIdForPlan,
@@ -39,7 +40,12 @@ export async function POST(req: Request) {
 
     const { data: profile } = await getMyProfile(supabase);
 
-    let customerId = profile?.stripe_customer_id as string | null | undefined;
+    // A stored id may be from Stripe test mode (or deleted); treat it as
+    // missing so a fresh customer is created in the current mode.
+    let customerId = await existingCustomerId(
+      stripe,
+      profile?.stripe_customer_id as string | null | undefined
+    );
 
     if (!customerId) {
       // Build the service client first so a misconfigured key fails before we
