@@ -1,17 +1,21 @@
 /* RenoSwap — Texas-first reno materials marketplace (browser-only demo) */
 const CATEGORIES = [
-  "Lumber & sheet goods",
-  "Drywall & insulation",
-  "Roofing",
-  "Flooring, tile & stone",
-  "Paint & adhesives",
-  "Doors, windows & trim",
-  "Kitchen & bath",
+  "Appliances & HVAC",
   "Cabinets & counters",
+  "Deck, fence & outdoor",
+  "Doors, windows & trim",
+  "Driveways & hardscape",
+  "Drywall & insulation",
   "Electrical & lighting",
+  "Flooring, tile & stone",
+  "Kitchen & bath",
+  "Landscaping",
+  "Lumber & sheet goods",
+  "Paint & adhesives",
   "Plumbing",
+  "Roofing",
   "Tools & equipment",
-  "Deck, fence & outdoor"
+  "Other",
 ];
 
 const CONDITIONS = [
