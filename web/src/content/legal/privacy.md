@@ -1,4 +1,4 @@
-**Effective date:** October 15, 2026 · **Version:** 1.0
+**Effective date:** November 19, 2026 · **Version:** 1.1
 
 This policy explains what information RenoSwap collects, how we use it, who can see it, and your choices. RenoSwap is run by RenoSwap LLC ("we," "us").
 
@@ -27,7 +27,7 @@ This policy explains what information RenoSwap collects, how we use it, who can 
 - **Login cookies.** We use a small number of cookies to keep you signed in and secure your session. We **don't** use advertising or tracking cookies.
 - **Basic logs.** Our hosting and database providers automatically record technical information like IP address, browser type, pages requested, and the time, for security and to fix problems.
 
-We don't currently send browser push notifications, and we don't collect your precise location. We only know the city and ZIP you type in. **Distance on Browse is approximate**: we estimate it from ZIP codes (for example, "~12 mi") and never show your address. **Photos:** when you upload a photo, the app strips GPS location data from the image file before it's stored.
+We don't currently send browser push notifications, and we don't collect your precise location. We only know the city and ZIP you type in. **Distance on Browse is approximate**: we estimate it from ZIP codes (for example, "~12 mi") and never show your address. **Photos:** listing photos are taken with your phone's camera when you post (or picked from your computer), and the app strips GPS location data from the image file before it's uploaded.
 
 ## 2. What's public and what's private
 
@@ -41,8 +41,8 @@ Only put in your profile and listings what you're comfortable sharing publicly. 
 
 **Private:**
 
-- **Your email address** isn't shown on the site. *(See the note for the owner at the end of this document.)*
-- **Messages and offers** can only be seen by the people in the conversation and by **RenoSwap admins**. Admins may review them to check reports, stop scams or abuse, or enforce our Terms.
+- **Your email address** isn't shown on the site.
+- **Messages and swap offers stay between the members in the conversation.** They're never shown publicly. **RenoSwap admins** can view them only when needed, for example to check a report, stop scams or abuse, or enforce our Terms.
 - **Reports** can only be seen by the person who filed them and by admins.
 - **Billing details** are only visible to you, our admins, and Stripe.
 
@@ -66,10 +66,12 @@ We don't send marketing emails without your permission. We don't use your inform
 
 - **With other users**, as described in Section 2
 - **With service providers** that run RenoSwap for us, only as needed to provide their services:
-  - **Supabase:** database, login, and file storage (profiles, listings, photos, messages)
+  - **Stripe:** payments and billing for plans and boosts (card details go straight to Stripe)
+  - **Supabase:** database, login (authentication), and file storage (profiles, listings, photos, messages)
   - **Vercel:** website hosting (and the basic logs described above)
-  - **Stripe:** payments and billing
   - **Resend:** sends account emails and email alerts
+
+  Each provider has its own privacy policy and may only use your information to provide its service to us.
 - **For legal reasons:** if the law requires it, to respond to valid legal requests, or to protect the rights, safety, or property of our users, the public, or RenoSwap
 - **If the business changes hands:** if RenoSwap is sold or merged, your information may transfer to the new owner, who must follow this policy or tell you about changes
 
@@ -89,7 +91,7 @@ Our providers may store data on servers outside Texas, including elsewhere in th
 ## 6. Your choices and rights
 
 - **Edit your profile** anytime on the Account page, including adding, changing, or removing your photo.
-- **Edit or remove listings** from My listings, or ask us to remove them.
+- **Edit or delete your listings** anytime from My listings, or ask us to remove them.
 - **Cancel a plan** from Billing → Manage billing.
 - **Delete your account** yourself anytime: tap **Delete account** at the bottom of the Account page and type DELETE to confirm. Or email RenoSwap101@gmail.com from the email address on your account.
 - **Turn email alerts off** on the Account page, or use the unsubscribe link in any alert email.

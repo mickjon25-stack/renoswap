@@ -1,10 +1,10 @@
-**Effective date:** October 15, 2026 · **Version:** 1.0
+**Effective date:** November 19, 2026 · **Version:** 1.1
 
 ## 1. Who we are and what these terms cover
 
 RenoSwap ("RenoSwap," "we," "us") is run by RenoSwap LLC. RenoSwap LLC is a Texas limited liability company. RenoSwap is a website that helps people swap, sell, or give away leftover renovation and construction materials.
 
-These Terms of Service ("Terms") are a contract between you and us. They cover your use of renoswap.com, renoswap.vercel.app, and any other RenoSwap site or app (together, the "Service"). By creating an account or using the Service, you agree to these Terms, our [Privacy Policy](/privacy), and our [Prohibited Items list](/prohibited). If you don't agree, please don't use RenoSwap.
+These Terms of Service ("Terms") are a contract between you and us. They cover your use of renoswap.com and any other RenoSwap site or app (together, the "Service"). By creating an account or using the Service, you agree to these Terms, our [Privacy Policy](/privacy), and our [Prohibited Items list](/prohibited). If you don't agree, please don't use RenoSwap.
 
 ## 2. Who can use RenoSwap
 
@@ -18,7 +18,7 @@ These Terms of Service ("Terms") are a contract between you and us. They cover y
 
 RenoSwap is **only a venue**: a place for users to connect. We are **not** a party to any swap, sale, or giveaway between users, we are not a buyer, seller, broker, or agent, and we are **not responsible or liable for meetups, pickups, or deliveries** between users.
 
-- **We don't handle payment for materials.** Buyers and sellers arrange payment (cash, Venmo, Zelle, etc.) and pickup or shipping themselves. RenoSwap never holds money for materials and takes no cut of sales.
+- **We don't process or guarantee payments between members.** Buyers and sellers arrange payment (cash, Venmo, Zelle, etc.) and pickup or shipping themselves, outside RenoSwap and **at their own risk**. RenoSwap never holds money for materials, takes no cut of sales, and can't refund or reverse a payment between members. The only payments RenoSwap processes are its own plans and listing boosts (see Section 6).
 - **We don't inspect, test, store, or deliver items, and we don't guarantee them.** We don't guarantee that any item is as described, safe, legal, up to code, or fit for your project.
 - **We don't check users' backgrounds.** A "Contractor" label means the user says they are a contractor or is on the Contractor plan. It is **not** a license check or endorsement.
 - **Admin review is limited.** An admin looks at listings before they go public. That review is a quick check against our rules, not an inspection or a promise that the listing is accurate or lawful.
@@ -45,7 +45,9 @@ You deal with other users at your own risk. Use good judgment and read our [safe
 
 **Distance.** Browse shows an **approximate** distance (for example, "~12 mi") calculated from ZIP codes, not exact addresses. It's an estimate only; confirm the pickup location with the other user.
 
-**Photos.** When you upload a photo, the app removes GPS location data stored in the image file. Still, don't photograph anything that shows your address.
+**Photos.** Listing photos must be **new photos of the actual item**, taken when you post. On phones, adding a photo opens the camera, and photos that look older than about a day may be turned away. Before upload, the app removes GPS location data stored in the image file. Still, don't photograph anything that shows your address.
+
+**Editing and deleting.** You can edit or delete your own listings anytime from **My listings**. If you change the title, description, category, condition, "looking for," or photos of an approved listing, it goes back for a quick review and is hidden from Browse until it's approved again. Price, location, and pickup changes stay live.
 
 **Deals.** An offer or message on RenoSwap is not a binding contract with us. Any deal is only between you and the other user.
 
@@ -73,11 +75,11 @@ You deal with other users at your own risk. Use good judgment and read our [safe
 
 **Listing boost:** **$1.99 one-time** per listing. A boosted listing is shown near the top of Browse for **7 days**.
 
-- **Payments are processed by Stripe.** We never see or store your full card number. Stripe's own terms and privacy policy also apply.
+- **Payments are processed by Stripe.** Plans and boosts are paid by card through Stripe's secure checkout. We never see or store your full card number. Stripe's own terms and privacy policy also apply. Charges show on your statement as **RENOSWAP.COM**.
 - **Subscriptions renew automatically every month** until you cancel. By subscribing, you authorize us (through Stripe) to charge your payment method each month.
 - **Switching plans.** If you switch between Homeowner and Contractor, Stripe adjusts the charge for the rest of the month (a prorated credit or charge).
 - **Canceling.** Cancel anytime from **Billing → Manage billing**. Your plan stays active until the end of the period you already paid for, then returns to Free. If you then have more active listings than the Free plan allows, your existing listings aren't deleted, but you can't post new ones until you're under the limit.
-- **Refunds.** Payments are **non-refundable**, including partial months, **unless the law requires a refund**. Boosts are **non-refundable once applied**. If we remove your boosted listing for breaking our rules, you don't get a refund. If we make a billing mistake, contact us and we'll fix it.
+- **Refunds.** Subscription payments are **non-refundable**, and we don't give refunds for partial months, **unless the law requires a refund**. Boosts are **non-refundable once applied**. If we remove your boosted listing for breaking our rules, you don't get a refund. We may choose to give a refund in other cases, but we don't have to. If we make a billing mistake, email RenoSwap101@gmail.com and we'll fix it.
 - **Price changes.** We may change prices. We'll tell you at least 30 days before a new price applies to your subscription, and you can cancel before then.
 - **Taxes.** Prices may not include applicable sales tax. If tax applies, it will be shown at checkout.
 - **Failed payments.** If a payment fails, your paid plan may end and your account goes back to Free.

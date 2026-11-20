@@ -1,4 +1,4 @@
-**Effective date:** October 15, 2026
+**Effective date:** November 19, 2026
 
 RenoSwap is for **leftover renovation and construction materials, fixtures, and tools**. Most leftovers are fine to list, like lumber, tile, drywall, doors, cabinets, fixtures, paint that's still sealed, and tools. But some things are dangerous, illegal, or need special disposal. **Don't list the items below.** Admins will reject or remove them, and repeat or serious violations can get your account closed.
 
@@ -50,7 +50,7 @@ This list isn't complete. If something is illegal to sell or give away in Texas 
 ## Not allowed as listings
 
 - **Services instead of materials**: labor, installation, hauling, demolition, contractor ads, or job postings. Tools and equipment are fine to list.
-- **Spam, fake, or misleading listings**, including stock photos, bait-and-switch prices, duplicate posts, or "contact me off-site for a better deal."
+- **Spam, fake, or misleading listings**, including stock photos or photos that aren't of the actual item, bait-and-switch prices, duplicate posts, or "contact me off-site for a better deal."
 - **Ads for another business or website**, or listings that just collect contact information.
 - **Trash or junk dumping**: things no one could reasonably reuse. (It's fine to mark reusable items "Dumpster-bound" to get them rescued.)
 - Listings that include someone else's personal information, or offensive, hateful, or adult content.
