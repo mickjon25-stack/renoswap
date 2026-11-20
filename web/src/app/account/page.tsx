@@ -285,12 +285,12 @@ export default function AccountPage() {
             Manage &quot;Looking for&quot; alerts
           </Link>
         </div>
-        <DeleteAccount />
         <form action="/auth/signout" method="post" className="account-signout">
           <button className="ghost account-signout-btn" type="submit">
             Sign out
           </button>
         </form>
+        <DeleteAccount />
       </div>
     </div>
   );
